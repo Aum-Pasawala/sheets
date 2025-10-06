@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sheets Game</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+</head>
+<body>
+    <div id="leaderboard" class="leaderboard">
+        <h3>Leaderboard</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Player</th>
+                    <th>Buy-In</th>
+                    <th>Net</th>
+                    <th>W</th>
+                    <th>L</th>
+                    <th>P</th>
+                </tr>
+            </thead>
+            <tbody id="leaderboard-body">
+            </tbody>
+        </table>
+    </div>
+
+    <div id="buyInScreen" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Buy-in to the Game</h2>
+            <p>Enter your name and buy-in amount.</p>
+            <input type="text" id="nameInput" placeholder="Enter your name" maxlength="15">
+            <input type="number" id="buyInInput" value="100" step="0.01" placeholder="Enter amount">
+            <button id="joinGameBtn">Join Game</button>
+        </div>
+    </div>
+
+    <div id="aceChoiceScreen" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2>You drew an Ace!</h2>
+            <p>Choose its value for this hand.</p>
+            <button id="aceLowBtn">Low (1)</button>
+            <button id="aceHighBtn">High (14)</button>
+        </div>
+    </div>
+
+    <div id="creditScreen" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2>Add Credit</h2>
+            <p>How much would you like to add to your cash?</p>
+            <input type="number" id="creditInput" step="0.01" placeholder="Enter amount">
+            <button id="addCreditBtn">Add Credit</button>
+            <button id="cancelCreditBtn" class="cancel-btn">Cancel</button>
+        </div>
+    </div>
+
+    <div class="game-table" id="gameTable" style="display: none;">
+        <button id="startGameBtn" class="start-game-btn" style="display: none;">Start Game</button>
+
+        <div class="dealer-area">
+            <div class="card" id="card1">
+                <div class="card-face card-front"></div>
+                <div class="card-face card-back"></div>
+            </div>
+            <div class="card card-middle" id="nextCard">
+                <div class="card-face card-front"></div>
+                <div class="card-face card-back"></div>
+            </div>
+            <div class="card" id="card2">
+                <div class="card-face card-front"></div>
+                <div class="card-face card-back"></div>
+            </div>
+        </div>
+    
+        <div class="center-pot">
+            <div class="pot-label">POT</div>
+            <div class="pot-amount" id="potAmount">$0.00</div>
+        </div>
+    
+        <div id="players-area"></div>
+      
+        <div class="message-area" id="message">Connecting...</div>
+    
+        <div class="action-area" id="actionArea" style="display: none;">
+            <input type="number" id="betInput" step="0.01" placeholder="Enter bet">
+            <button id="betButton">Bet</button>
+            <button id="passButton">Pass</button>
+            <button id="creditButton" class="credit-btn">Credit</button>
+        </div>
+
+        <div class="settings-area">
+            <label for="potRebuildInput">Pot Rebuild:</label>
+            <input type="number" id="potRebuildInput" value="5" step="0.01">
+        </div>
+
+        <button id="sixSevenBtn" class="six-seven-btn" style="display: none;">6-7!</button>
+    </div>
+
+    <div id="chat-container" class="chat-container">
+        <div id="chat-window" class="chat-window"></div>
+        <div class="chat-input-area">
+            <input type="text" id="chat-input" placeholder="Type a message...">
+            <button id="chat-send-btn">Send</button>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="client.js"></script>
+</body>
+</html>
