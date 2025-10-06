@@ -1,12 +1,17 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require("socket.io");
+const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // --- Game State ---
 let players = {};
@@ -157,6 +162,17 @@ async function dealSecondCard() {
     await new Promise(resolve => setTimeout(resolve, 500));
     io.emit('dealMiddleCardPlaceholder');
 
+    // Check if both outer cards are the same
+    if (currentCards[0].value === currentCards[1].value) {
+        const currentPlayerId = playerOrder[currentPlayerIndex];
+        const penalty = 1.00;
+        players[currentPlayerId].chips -= penalty;
+        pot += penalty;
+        broadcastMessage(`Same cards! ${players[currentPlayerId].name} pays $${penalty.toFixed(2)} and passes.`, true);
+        setTimeout(startNewTurn, 2000);
+        return;
+    }
+
     const cardValues = new Set(currentCards.map(c => c.value));
     if (cardValues.has(6) && cardValues.has(7)) {
         is67ChallengeActive = true;
@@ -164,33 +180,40 @@ async function dealSecondCard() {
         broadcastMessage("6-7 CHALLENGE! Last to press pays a fine!", true);
         io.emit('start67Challenge');
 
-        const challengeTimer = setTimeout(() => {
+        setTimeout(() => {
             if (!is67ChallengeActive) return;
             is67ChallengeActive = false;
             io.emit('end67Challenge');
             let loserId = null;
+            
+            // Find the last person who pressed (or didn't press)
             if (sixSevenPresses.length < playerOrder.length) {
                 const playersWhoDidNotPress = playerOrder.filter(pId => players[pId] && !sixSevenPresses.includes(pId));
-                if (playersWhoDidNotPress.length === 1) {
-                    loserId = playersWhoDidNotPress[0];
+                if (playersWhoDidNotPress.length > 0) {
+                    loserId = playersWhoDidNotPress[playersWhoDidNotPress.length - 1];
                 }
+            } else if (sixSevenPresses.length > 0) {
+                // Everyone pressed, last one to press loses
+                loserId = sixSevenPresses[sixSevenPresses.length - 1];
             }
 
             if (loserId) {
                 const fine = 5.00;
                 players[loserId].chips -= fine;
                 pot += fine;
-                broadcastMessage(`${players[loserId].name} was last to press and is fined $${fine.toFixed(2)}!`, true);
+                broadcastMessage(`${players[loserId].name} was last and is fined $${fine.toFixed(2)}!`, true);
+                broadcastSystemMessage(`${players[loserId].name} was too slow on the 6-7 challenge and paid $${fine.toFixed(2)}.`);
                 broadcastGameState();
             } else {
                 broadcastMessage("6-7 challenge ended with no loser.");
             }
         }, 5000);
     }
-    // FIX: Broadcast the state to allow the player to bet after Ace choice.
+
     broadcastGameState();
 }
 
+// --- Socket.IO Connections ---
 io.on('connection', (socket) => {
     socket.on('joinGame', (data) => {
         if (isGameRunning) {
@@ -227,7 +250,7 @@ io.on('connection', (socket) => {
     socket.on('addCredit', (amount) => {
         if (players[socket.id] && amount > 0) {
             players[socket.id].chips += amount;
-            players[socket.id].totalBuyIn += amount; // Add to totalBuyIn
+            players[socket.id].totalBuyIn += amount;
             broadcastSystemMessage(`${players[socket.id].name} added $${amount.toFixed(2)} in credit.`);
             broadcastGameState();
         }
@@ -344,4 +367,6 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => { console.log(`Server is running on port ${PORT}`); });
+server.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});

@@ -14,32 +14,32 @@ body.screen-shake {
   animation: screen-shake 0.4s ease-in-out;
 }
 
-/* The Table */
+/* The Table - Much Larger */
 .game-table {
-  width: 950px;
-  height: 650px;
+  width: 1400px;
+  height: 900px;
   background-color: #006400;
-  border: 20px solid #5c3317;
-  border-radius: 325px;
+  border: 25px solid #5c3317;
+  border-radius: 450px;
   position: relative;
   box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40px;
+  padding: 60px;
   box-sizing: border-box;
 }
 
-/* Card Styling */
+/* Card Styling - Significantly Larger */
 .dealer-area {
   display: flex;
-  gap: 30px;
-  margin-top: 120px;
+  gap: 50px;
+  margin-top: 180px;
   perspective: 1000px;
 }
 .card {
-  width: 100px;
-  height: 150px;
+  width: 160px;
+  height: 240px;
   position: relative;
   transform-style: preserve-3d;
   opacity: 0;
@@ -54,7 +54,7 @@ body.screen-shake {
   width: 100%;
   height: 100%;
   backface-visibility: hidden;
-  border-radius: 8px;
+  border-radius: 12px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -63,7 +63,7 @@ body.screen-shake {
 .card-front {
   background-color: white;
   color: black;
-  font-size: 44px;
+  font-size: 70px;
   font-weight: bold;
   transform: rotateY(180deg);
 }
@@ -108,101 +108,135 @@ body.screen-shake {
 }
 .card-front span {
   position: absolute;
-  font-size: 20px;
+  font-size: 32px;
 }
 .card-front .top {
-  top: 8px;
-  left: 10px;
+  top: 12px;
+  left: 15px;
 }
 .card-front .bottom {
-  bottom: 8px;
-  right: 10px;
+  bottom: 12px;
+  right: 15px;
   transform: rotate(180deg);
 }
 
 /* Pot, Player Info, Messages */
 .center-pot {
   text-align: center;
-  margin-top: 60px;
+  margin-top: 90px;
   z-index: 10;
 }
 .pot-label {
-  font-size: 16px;
+  font-size: 20px;
   color: #ccc;
 }
 .pot-amount {
-  font-size: 36px;
+  font-size: 48px;
   font-weight: bold;
 }
+
+/* Player positions - OUTSIDE the table */
 .player-seat {
   position: absolute;
   text-align: center;
-  background: rgba(0, 0, 0, 0.4);
-  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 12px 16px;
   border-radius: 10px;
-  border: 1px solid transparent;
+  border: 2px solid transparent;
   transition: box-shadow 0.3s, border 0.3s;
-  min-width: 100px;
+  min-width: 120px;
+  z-index: 1002;
 }
+
+/* Positions arranged in a circle OUTSIDE the table */
 .player-pos-1 {
-  bottom: 80px;
+  bottom: -80px;
   left: 50%;
   transform: translateX(-50%);
 }
 .player-pos-2 {
-  bottom: 180px;
-  left: 120px;
+  bottom: 40px;
+  left: -160px;
 }
 .player-pos-3 {
-  top: 180px;
-  left: 120px;
+  top: 200px;
+  left: -180px;
 }
 .player-pos-4 {
-  top: 80px;
+  top: -80px;
   left: 50%;
   transform: translateX(-50%);
 }
 .player-pos-5 {
-  top: 180px;
-  right: 120px;
+  top: 200px;
+  right: -180px;
 }
 .player-pos-6 {
-  bottom: 180px;
-  right: 120px;
+  bottom: 40px;
+  right: -160px;
+}
+.player-pos-7 {
+  bottom: 300px;
+  left: -200px;
+}
+.player-pos-8 {
+  top: 450px;
+  left: -200px;
+}
+.player-pos-9 {
+  top: 500px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.player-pos-10 {
+  top: 450px;
+  right: -200px;
+}
+.player-pos-11 {
+  bottom: 300px;
+  right: -200px;
+}
+.player-pos-12 {
+  bottom: 200px;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .player-name {
   font-weight: bold;
   margin-bottom: 8px;
+  font-size: 16px;
 }
 .player-chips {
   color: #f1c40f;
+  font-size: 15px;
 }
 .current-turn {
-  box-shadow: 0 0 15px cyan;
-  border: 1px solid cyan;
+  box-shadow: 0 0 20px cyan;
+  border: 2px solid cyan;
 }
 .my-seat {
-  border: 1px solid white;
+  border: 2px solid white;
 }
+
 .message-area {
   position: absolute;
-  top: 295px;
+  top: 420px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 18px;
+  font-size: 20px;
   font-style: italic;
-  min-height: 25px;
+  min-height: 30px;
   transition: all 0.3s;
   z-index: 50;
   text-align: center;
-  padding: 10px 20px;
-  background: rgba(0, 0, 0, 0.6);
+  padding: 12px 24px;
+  background: rgba(0, 0, 0, 0.7);
   border-radius: 10px;
   white-space: nowrap;
 }
 .message-area.emphasis {
-  font-size: 32px;
+  font-size: 38px;
   font-weight: bolder;
   color: #ffcc00;
   transform: translateX(-50%) scale(1.1);
@@ -212,11 +246,11 @@ body.screen-shake {
 /* Action controls */
 .action-area {
   position: absolute;
-  bottom: 20px;
+  bottom: 30px;
   display: flex;
-  gap: 10px;
+  gap: 12px;
   background-color: rgba(0, 70, 0, 0.7);
-  padding: 10px;
+  padding: 12px;
   border-radius: 10px;
 }
 .credit-btn {
@@ -226,15 +260,15 @@ body.screen-shake {
   background-color: #2ecc71;
 }
 input[type="number"] {
-  width: 100px;
-  padding: 10px;
+  width: 110px;
+  padding: 12px;
   border-radius: 5px;
   border: 1px solid #ccc;
-  font-size: 16px;
+  font-size: 18px;
 }
 button {
-  padding: 10px 25px;
-  font-size: 16px;
+  padding: 12px 28px;
+  font-size: 18px;
   border: none;
   border-radius: 5px;
   background-color: #2c3e50;
@@ -246,7 +280,6 @@ button:hover {
   background-color: #34495e;
 }
 
-/* ADDED style for the cancel button */
 .cancel-btn {
   background-color: #7f8c8d;
 }
@@ -283,20 +316,21 @@ button:hover {
   margin: 10px;
 }
 
-/* Leaderboard & Settings */
+/* Leaderboard - Larger */
 .leaderboard {
   position: fixed;
   top: 20px;
   left: 20px;
-  background: rgba(0, 0, 0, 0.6);
-  padding: 10px;
-  border-radius: 8px;
-  width: 250px; /* Adjusted width */
+  background: rgba(0, 0, 0, 0.75);
+  padding: 15px;
+  border-radius: 10px;
+  width: 320px;
   z-index: 1001;
 }
 .leaderboard h3 {
-  margin: 0 0 5px 0;
+  margin: 0 0 10px 0;
   text-align: center;
+  font-size: 22px;
 }
 .leaderboard table {
   width: 100%;
@@ -304,21 +338,23 @@ button:hover {
 }
 .leaderboard th,
 .leaderboard td {
-  padding: 4px;
+  padding: 6px;
   text-align: left;
+  font-size: 15px;
 }
 .leaderboard th {
-  border-bottom: 1px solid #777;
+  border-bottom: 2px solid #777;
+  font-size: 14px;
 }
 .leaderboard .my-row {
-  background-color: rgba(41, 128, 185, 0.3);
+  background-color: rgba(41, 128, 185, 0.4);
 }
 .leaderboard .net-positive {
-    color: #2ecc71; /* Green */
+    color: #2ecc71;
     font-weight: bold;
 }
 .leaderboard .net-negative {
-    color: #e74c3c; /* Red */
+    color: #e74c3c;
     font-weight: bold;
 }
 
@@ -327,22 +363,24 @@ button:hover {
   top: 20px;
   right: 20px;
   background: rgba(0, 0, 0, 0.5);
-  padding: 5px 10px;
+  padding: 8px 12px;
   border-radius: 5px;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 8px;
   z-index: 1001;
 }
 .settings-area label {
   color: #ccc;
+  font-size: 16px;
 }
 .settings-area input {
-  width: 60px;
+  width: 70px;
   background: #333;
   color: white;
   border: 1px solid #555;
-  padding: 5px;
+  padding: 6px;
+  font-size: 16px;
 }
 .settings-area input:disabled {
   background: #444;
@@ -364,16 +402,16 @@ button:hover {
   border: 3px solid white;
 }
 .six-seven-btn {
-  padding: 35px 45px;
-  font-size: 52px;
+  padding: 45px 55px;
+  font-size: 64px;
   background-color: #e74c3c;
   border-radius: 50%;
   animation: pulse 1s infinite, flash-red 0.5s infinite;
   box-shadow: 0 0 25px rgba(255, 0, 0, 0.7);
 }
 .start-game-btn {
-  padding: 20px 40px;
-  font-size: 24px;
+  padding: 25px 50px;
+  font-size: 28px;
   background-color: #27ae60;
 }
 
@@ -382,9 +420,9 @@ button:hover {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  width: 300px;
-  height: 400px;
-  background: rgba(0, 0, 0, 0.7);
+  width: 320px;
+  height: 420px;
+  background: rgba(0, 0, 0, 0.8);
   border: 2px solid #555;
   border-radius: 10px;
   display: flex;
@@ -393,13 +431,14 @@ button:hover {
 }
 .chat-window {
   flex-grow: 1;
-  padding: 10px;
+  padding: 12px;
   overflow-y: auto;
   color: white;
 }
 .chat-window p {
-  margin: 0 0 5px 0;
+  margin: 0 0 6px 0;
   word-wrap: break-word;
+  font-size: 14px;
 }
 .chat-window p.system-message {
   font-style: italic;
@@ -407,7 +446,7 @@ button:hover {
 }
 .chat-input-area {
   display: flex;
-  padding: 5px;
+  padding: 8px;
   border-top: 1px solid #555;
 }
 #chat-input {
@@ -415,17 +454,19 @@ button:hover {
   border: none;
   background: #333;
   color: white;
-  padding: 8px;
+  padding: 10px;
+  font-size: 14px;
 }
 #chat-send-btn {
   background: #3498db;
+  font-size: 14px;
 }
 
 /* Animations */
 @keyframes slide-in-left {
   from {
     opacity: 0;
-    transform: translateX(-150px) rotateY(180deg);
+    transform: translateX(-200px) rotateY(180deg);
   }
   to {
     opacity: 1;
@@ -435,7 +476,7 @@ button:hover {
 @keyframes slide-in-right {
   from {
     opacity: 0;
-    transform: translateX(150px) rotateY(180deg);
+    transform: translateX(200px) rotateY(180deg);
   }
   to {
     opacity: 1;
@@ -445,7 +486,7 @@ button:hover {
 @keyframes slide-in-middle {
   from {
     opacity: 0;
-    transform: translateY(-100px) rotateY(0deg);
+    transform: translateY(-150px) rotateY(0deg);
   }
   to {
     opacity: 1;
@@ -485,9 +526,6 @@ button:hover {
   90% {
     transform: translate(-5px, 0px) rotate(-2deg);
   }
-}
-.card.post-hit .card-face {
-  animation: insane-shake 0.7s ease-in-out;
 }
 @keyframes post-flash {
   0%,
