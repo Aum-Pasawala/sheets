@@ -39,67 +39,117 @@ const chatSendBtn = document.getElementById('chat-send-btn');
 const body = document.querySelector('body');
 const postVideo = document.getElementById('postVideo');
 const videoBackdrop = document.getElementById('videoBackdrop');
+const bgMusic = document.getElementById('bgMusic');
+const sfxToggle = document.getElementById('sfxToggle');
+const musicToggle = document.getElementById('musicToggle');
+
+// Debug check
+console.log('🎵 Background Music Element:', bgMusic ? 'FOUND ✅' : 'NOT FOUND ❌');
+if (bgMusic) {
+  console.log('🎵 Music Source:', bgMusic.src);
+  console.log('🎵 Current Source:', bgMusic.currentSrc);
+  
+  // Test if file exists
+  bgMusic.addEventListener('error', (e) => {
+    console.error('❌ MUSIC FILE ERROR - File not found or cannot load!');
+    console.error('Make sure casino-music.mp3 exists in public folder');
+  });
+  
+  bgMusic.addEventListener('canplaythrough', () => {
+    console.log('✅ Music file loaded and ready to play');
+  });
+} else {
+  console.error('❌ bgMusic element is NULL - check HTML');
+}
 
 let myPlayerId = null;
 let currentPotValue = 0;
 let playerStreaks = {};
 let isVideoPlaying = false;
 let canBet = false;
+let sfxEnabled = true;
+let musicEnabled = true;
+let players = {};
 
 // --- Sound Effects ---
 let soundsReady = false;
 const synth = new Tone.PolySynth(Tone.Synth).toDestination();
 const sounds = {
-  cardSlide: () => synth.triggerAttackRelease("G2", "16n", Tone.now(), 0.1),
-  cardFlip: () => synth.triggerAttackRelease("C#5", "8n"),
+  cardSlide: () => { if (sfxEnabled) synth.triggerAttackRelease("G2", "16n", Tone.now(), 0.1); },
+  cardFlip: () => { if (sfxEnabled) synth.triggerAttackRelease("C#5", "8n"); },
   cash: () => {
+    if (!sfxEnabled) return;
     const now = Tone.now();
     synth.triggerAttackRelease("A5", "16n", now);
     synth.triggerAttackRelease("C6", "16n", now + 0.07);
     synth.triggerAttackRelease("E6", "16n", now + 0.14);
   },
   chips: () => {
+    if (!sfxEnabled) return;
     const now = Tone.now();
     synth.triggerAttackRelease("D4", "32n", now);
     synth.triggerAttackRelease("D4", "32n", now + 0.05);
     synth.triggerAttackRelease("D4", "32n", now + 0.1);
   },
   lose: () => {
+    if (!sfxEnabled) return;
     const now = Tone.now();
     synth.triggerAttackRelease("D3", "8n", now);
     synth.triggerAttackRelease("C3", "8n", now + 0.15);
     synth.triggerAttackRelease("A2", "4n", now + 0.3);
   },
   sadTrombone: () => {
+    if (!sfxEnabled) return;
     const now = Tone.now();
     synth.triggerAttackRelease("D3", "8n", now);
     synth.triggerAttackRelease("C3", "8n", now + 0.2);
     synth.triggerAttackRelease("Bb2", "8n", now + 0.4);
     synth.triggerAttackRelease("A2", "2n", now + 0.6);
   },
-  post: () => synth.triggerAttackRelease(["C2", "G#2", "C3"], "2n", Tone.now(), 0.5),
-  click: () => synth.triggerAttackRelease("C7", "32n", Tone.now(), 0.3),
+  post: () => { if (sfxEnabled) synth.triggerAttackRelease(["C2", "G#2", "C3"], "2n", Tone.now(), 0.5); },
+  click: () => { if (sfxEnabled) synth.triggerAttackRelease("C7", "32n", Tone.now(), 0.3); },
 };
 
+// Initialize audio context
 async function initAudio() {
   if (!soundsReady) {
     await Tone.start();
     soundsReady = true;
-    console.log('Audio ready');
+    console.log('🔊 Audio context ready');
   }
 }
-document.body.addEventListener('click', initAudio, { once: true });
+
+// Start music function
+function startMusic() {
+  if (bgMusic && musicEnabled) {
+    bgMusic.volume = 0.6;
+    bgMusic.play()
+      .then(() => console.log('🎵 Music PLAYING ✅'))
+      .catch(err => console.error('🎵 Music play failed:', err));
+  }
+}
+
+// Try to start on any interaction
+document.body.addEventListener('click', async () => {
+  await initAudio();
+  if (bgMusic && musicEnabled && bgMusic.paused) {
+    startMusic();
+  }
+}, { once: false });
 
 // --- Render Functions ---
 function renderCard(element, card, isFaceUp = false) {
   const front = element.querySelector('.card-front');
+  const back = element.querySelector('.card-back');
   element.className = 'card';
   
   if (!card) {
     front.innerHTML = '';
-    const back = element.querySelector('.card-back');
     back.innerHTML = '';
-    if (element.id === 'nextCard') back.innerHTML = '?';
+    if (element.id === 'nextCard') {
+      back.innerHTML = '?';
+      element.classList.add('visible', 'card-middle');
+    }
     return;
   }
 
@@ -111,11 +161,12 @@ function renderCard(element, card, isFaceUp = false) {
     <span class="bottom">${card.rank}${card.suit}</span>
   `;
 
-  // only middle card flips; side cards stay face-up
-  if (isFaceUp) element.classList.add('is-flipping');
+  // For outer cards, immediately show face-up
+  if (isFaceUp) {
+    element.classList.add('is-flipping');
+  }
 }
 
-// --- UI Helpers ---
 function addChatMessage(data) {
   const p = document.createElement('p');
   if (data.isSystem) {
@@ -149,13 +200,15 @@ function updateLeaderboard(players, stats, myId) {
   }
 }
 
-// --- Navigation ---
+// --- Event Listeners ---
 getStartedBtn.addEventListener('click', async () => {
   await initAudio();
   homePage.style.display = 'none';
   buyInScreen.style.display = 'flex';
   sounds.click();
+  startMusic();
 });
+
 joinGameBtn.addEventListener('click', () => {
   const buy = parseFloat(buyInInput.value);
   const name = nameInput.value || `Player ${Math.floor(Math.random() * 100)}`;
@@ -166,10 +219,10 @@ joinGameBtn.addEventListener('click', () => {
     chatContainer.style.display = 'flex';
     leaderboard.style.display = 'block';
     sounds.click();
+    startMusic();
   }
 });
 
-// --- Credit Controls ---
 creditButton.addEventListener('click', () => creditScreen.style.display = 'flex');
 addCreditBtn.addEventListener('click', () => {
   const amt = parseFloat(creditInput.value);
@@ -179,7 +232,6 @@ addCreditBtn.addEventListener('click', () => {
 });
 cancelCreditBtn.addEventListener('click', () => creditScreen.style.display = 'none');
 
-// --- Game Buttons ---
 startGameBtn.addEventListener('click', () => socket.emit('startGame'));
 aceLowBtn.addEventListener('click', () => { socket.emit('aceChoice', 'low'); aceChoiceScreen.style.display = 'none'; });
 aceHighBtn.addEventListener('click', () => { socket.emit('aceChoice', 'high'); aceChoiceScreen.style.display = 'none'; });
@@ -187,22 +239,38 @@ aceHighBtn.addEventListener('click', () => { socket.emit('aceChoice', 'high'); a
 betButton.addEventListener('click', () => {
   if (!canBet) return;
   const amt = parseFloat(betInput.value);
-  if (amt > 0) {
-    canBet = false;
-    socket.emit('playerBet', amt);
-    betInput.value = '';
-    sounds.chips();
+  const player = players[myPlayerId];
+  
+  if (!amt || amt <= 0) return;
+  
+  if (player && amt > player.chips) {
+    alert(`Insufficient funds! You have $${player.chips.toFixed(2)}.\n\nPlease:\n• Add more credit, or\n• Bet a smaller amount`);
+    return;
   }
+  
+  canBet = false;
+  socket.emit('playerBet', amt);
+  betInput.value = '';
+  sounds.chips();
 });
+
 passButton.addEventListener('click', () => {
   if (!canBet) return;
   canBet = false;
   socket.emit('playerPass');
   sounds.click();
 });
+
 potButton.addEventListener('click', () => {
   if (!canBet) return;
+  const player = players[myPlayerId];
+  
   if (currentPotValue > 0) {
+    if (player && currentPotValue > player.chips) {
+      alert(`Insufficient funds to bet the pot!\n\nPot: $${currentPotValue.toFixed(2)}\nYour chips: $${player.chips.toFixed(2)}\n\nPlease:\n• Add more credit, or\n• Bet a smaller amount`);
+      return;
+    }
+    
     canBet = false;
     socket.emit('playerBet', currentPotValue);
     sounds.chips();
@@ -224,7 +292,6 @@ document.addEventListener('keydown', (e) => {
   else if (key === 'p') { e.preventDefault(); potButton.click(); }
 });
 
-// --- Chat ---
 chatSendBtn.addEventListener('click', () => {
   if (chatInput.value.trim()) {
     socket.emit('chatMessage', chatInput.value.trim());
@@ -233,20 +300,56 @@ chatSendBtn.addEventListener('click', () => {
 });
 chatInput.addEventListener('keypress', e => { if (e.key === 'Enter') chatSendBtn.click(); });
 
+sixSevenBtn.addEventListener('click', () => { 
+  socket.emit('pressed67'); 
+  sixSevenBtn.style.display = 'none'; 
+  sounds.click(); 
+});
+
+potRebuildInput.addEventListener('change', () => { 
+  socket.emit('setPotRebuild', parseFloat(potRebuildInput.value)); 
+});
+
+// --- Audio Toggles ---
+sfxToggle.addEventListener('change', (e) => {
+  sfxEnabled = e.target.checked;
+  console.log('🔊 SFX:', sfxEnabled ? 'ON' : 'OFF');
+});
+
+musicToggle.addEventListener('change', (e) => {
+  musicEnabled = e.target.checked;
+  if (bgMusic) {
+    if (musicEnabled) {
+      bgMusic.play().catch(e => console.log('Music play error:', e));
+    } else {
+      bgMusic.pause();
+    }
+  }
+  if (postVideo) {
+    postVideo.muted = !musicEnabled;
+  }
+  console.log('🎵 Music/Video:', musicEnabled ? 'ON' : 'OFF');
+});
+
 // --- Socket Events ---
 socket.on('connect', () => {
   myPlayerId = socket.id;
+  console.log('🔌 Connected:', myPlayerId);
+  
   if (postVideo) {
     postVideo.playsInline = true;
     postVideo.preload = 'auto';
   }
+  
+  if (bgMusic) {
+    bgMusic.loop = true;
+    bgMusic.volume = 0.6;
+    bgMusic.preload = 'auto';
+    console.log('🎵 Music configured: volume 60%, looping');
+  }
 });
 
-// *** MAIN: gameState handler (updated to restore original bet bar behavior) ***
 socket.on('gameState', (state) => {
-  // debug/log to help verify why action bar may not appear
-  console.log('gameState:', { currentPlayerId: state.currentPlayerId, myPlayerId, isGameRunning: state.isGameRunning });
-
   currentPotValue = state.pot;
   potAmountElem.textContent = `$${state.pot.toFixed(2)}`;
   potRebuildInput.disabled = (state.gameAdminId !== myPlayerId);
@@ -272,23 +375,35 @@ socket.on('gameState', (state) => {
     playersArea.appendChild(div);
   });
 
-  // === RESTORE ORIGINAL BEHAVIOR ===
-  // Show the bet/pot/pass bar whenever it's my turn (regardless of isGameRunning or ace waiting).
-  // This mirrors the original behavior you described.
+  players = state.players;
   actionArea.style.display = (state.currentPlayerId === myPlayerId) ? 'flex' : 'none';
-
   updateLeaderboard(state.players, state.playerStats, myPlayerId);
 });
 
 socket.on('dealCard', (data) => {
   const elem = data.cardSlot === 1 ? card1Elem : card2Elem;
-  // side cards come in face-up (no flipping)
-  renderCard(elem, data.card, false);
-  elem.classList.remove('slide-in-left', 'slide-in-right', 'slide-in-middle');
+  
+  // Clear any existing classes and reset transform
+  elem.className = 'card';
+  elem.style.opacity = '0';
+  elem.style.transform = '';
+  
+  // Render the card with face-up flag
+  renderCard(elem, data.card, true);
+  
+  // Add slide animation
   elem.classList.add(data.cardSlot === 1 ? 'slide-in-left' : 'slide-in-right');
-  elem.style.opacity = '1';
   elem.classList.add('visible');
+  
+  // FORCE the card to show face-up with direct transform
+  elem.style.transform = 'rotateY(180deg)';
+  elem.style.opacity = '1';
+  
   if (soundsReady) sounds.cardSlide();
+  
+  console.log(`Card ${data.cardSlot} dealt:`, data.card);
+  console.log('Transform applied:', elem.style.transform);
+  console.log('Classes:', elem.className);
 });
 
 socket.on('dealMiddleCardPlaceholder', () => {
@@ -316,13 +431,13 @@ socket.on('cardResult', (data) => {
       body.classList.add('screen-shake');
       if (soundsReady) sounds.post();
 
-      // --- Post video logic ---
       if (postVideo && !isVideoPlaying) {
         isVideoPlaying = true;
         videoBackdrop.style.display = 'block';
         postVideo.style.display = 'block';
         postVideo.currentTime = 0;
-        postVideo.volume = 1;
+        postVideo.volume = musicEnabled ? 1 : 0;
+        postVideo.muted = !musicEnabled;
         const playPromise = postVideo.play();
         if (playPromise) {
           playPromise.then(() => {
@@ -358,10 +473,20 @@ socket.on('cardResult', (data) => {
 });
 
 socket.on('clearResult', () => {
+  // Reset cards to initial state
+  card1Elem.className = 'card';
+  card1Elem.style.opacity = '0';
+  card2Elem.className = 'card';
+  card2Elem.style.opacity = '0';
+  nextCardElem.className = 'card card-middle';
+  nextCardElem.style.opacity = '0';
+  
   renderCard(card1Elem, null);
   renderCard(card2Elem, null);
   renderCard(nextCardElem, null);
   canBet = false;
+  
+  console.log('Cards cleared and reset');
 });
 
 socket.on('message', (data) => {
