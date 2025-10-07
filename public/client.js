@@ -93,13 +93,13 @@ document.body.addEventListener('click', initAudio, { once: true });
 // --- Render Functions ---
 function renderCard(element, card, isFaceUp = false) {
   const front = element.querySelector('.card-front');
-  const back = element.querySelector('.card-back');
   element.className = 'card';
   
   if (!card) {
     front.innerHTML = '';
-    if (back) back.innerHTML = '';
-    if (element.id === 'nextCard' && back) back.innerHTML = '?';
+    const back = element.querySelector('.card-back');
+    back.innerHTML = '';
+    if (element.id === 'nextCard') back.innerHTML = '?';
     return;
   }
 
@@ -111,11 +111,7 @@ function renderCard(element, card, isFaceUp = false) {
     <span class="bottom">${card.rank}${card.suit}</span>
   `;
 
-  // Always ensure the front is visible for side cards
-  if (back) back.style.display = 'none';
-  front.style.display = 'flex';
-
-  // Only middle card flips
+  // only middle card flips; side cards stay face-up
   if (isFaceUp) element.classList.add('is-flipping');
 }
 
@@ -246,7 +242,11 @@ socket.on('connect', () => {
   }
 });
 
+// *** MAIN: gameState handler (updated to restore original bet bar behavior) ***
 socket.on('gameState', (state) => {
+  // debug/log to help verify why action bar may not appear
+  console.log('gameState:', { currentPlayerId: state.currentPlayerId, myPlayerId, isGameRunning: state.isGameRunning });
+
   currentPotValue = state.pot;
   potAmountElem.textContent = `$${state.pot.toFixed(2)}`;
   potRebuildInput.disabled = (state.gameAdminId !== myPlayerId);
@@ -272,29 +272,22 @@ socket.on('gameState', (state) => {
     playersArea.appendChild(div);
   });
 
-  // ✅ bet bar appears properly when it's your turn
+  // === RESTORE ORIGINAL BEHAVIOR ===
+  // Show the bet/pot/pass bar whenever it's my turn (regardless of isGameRunning or ace waiting).
+  // This mirrors the original behavior you described.
   actionArea.style.display = (state.currentPlayerId === myPlayerId) ? 'flex' : 'none';
 
   updateLeaderboard(state.players, state.playerStats, myPlayerId);
 });
 
-// ✅ FIXED: side cards come in face-up
 socket.on('dealCard', (data) => {
   const elem = data.cardSlot === 1 ? card1Elem : card2Elem;
-
-  // Clear flipping/back states
-  elem.classList.remove('is-flipping', 'is-flipped');
-  elem.style.transform = 'none';
-
-  // Render face-up
+  // side cards come in face-up (no flipping)
   renderCard(elem, data.card, false);
-
-  // Reset and animate
   elem.classList.remove('slide-in-left', 'slide-in-right', 'slide-in-middle');
   elem.classList.add(data.cardSlot === 1 ? 'slide-in-left' : 'slide-in-right');
   elem.style.opacity = '1';
   elem.classList.add('visible');
-
   if (soundsReady) sounds.cardSlide();
 });
 
