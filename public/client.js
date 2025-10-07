@@ -140,13 +140,16 @@ document.body.addEventListener('click', async () => {
 // --- Render Functions ---
 function renderCard(element, card, isFaceUp = false) {
   const front = element.querySelector('.card-front');
+  const back = element.querySelector('.card-back');
   element.className = 'card';
   
   if (!card) {
     front.innerHTML = '';
-    const back = element.querySelector('.card-back');
     back.innerHTML = '';
-    if (element.id === 'nextCard') back.innerHTML = '?';
+    if (element.id === 'nextCard') {
+      back.innerHTML = '?';
+      element.classList.add('visible', 'card-middle');
+    }
     return;
   }
 
@@ -158,7 +161,10 @@ function renderCard(element, card, isFaceUp = false) {
     <span class="bottom">${card.rank}${card.suit}</span>
   `;
 
-  if (isFaceUp) element.classList.add('is-flipping');
+  // For outer cards, immediately show face-up
+  if (isFaceUp) {
+    element.classList.add('is-flipping');
+  }
 }
 
 function addChatMessage(data) {
@@ -376,15 +382,25 @@ socket.on('gameState', (state) => {
 
 socket.on('dealCard', (data) => {
   const elem = data.cardSlot === 1 ? card1Elem : card2Elem;
-  renderCard(elem, data.card, true); // TRUE = face up immediately
-  elem.classList.remove('slide-in-left', 'slide-in-right', 'slide-in-middle');
+  
+  // Clear any existing classes
+  elem.className = 'card';
+  elem.style.opacity = '0';
+  
+  // Render the card with face-up flag
+  renderCard(elem, data.card, true);
+  
+  // Add slide animation
   elem.classList.add(data.cardSlot === 1 ? 'slide-in-left' : 'slide-in-right');
+  elem.classList.add('visible');
+  
+  // Make visible and immediately show face
   elem.style.opacity = '1';
-  // Add small delay then flip to face-up
-  setTimeout(() => {
-    elem.classList.add('is-flipping');
-  }, 100);
+  elem.classList.add('is-flipping');
+  
   if (soundsReady) sounds.cardSlide();
+  
+  console.log(`Card ${data.cardSlot} dealt:`, data.card, 'Classes:', elem.className);
 });
 
 socket.on('dealMiddleCardPlaceholder', () => {
@@ -454,10 +470,20 @@ socket.on('cardResult', (data) => {
 });
 
 socket.on('clearResult', () => {
+  // Reset cards to initial state
+  card1Elem.className = 'card';
+  card1Elem.style.opacity = '0';
+  card2Elem.className = 'card';
+  card2Elem.style.opacity = '0';
+  nextCardElem.className = 'card card-middle';
+  nextCardElem.style.opacity = '0';
+  
   renderCard(card1Elem, null);
   renderCard(card2Elem, null);
   renderCard(nextCardElem, null);
   canBet = false;
+  
+  console.log('Cards cleared and reset');
 });
 
 socket.on('message', (data) => {
