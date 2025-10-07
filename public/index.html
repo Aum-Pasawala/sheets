@@ -8,7 +8,66 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
 </head>
 <body>
-    <div id="leaderboard" class="leaderboard">
+    <!-- Home Page -->
+    <div id="homePage" class="home-page">
+        <div class="home-content">
+            <div class="home-hero">
+                <div class="cards-image">
+                    🃏 🂡 🂱 🃁
+                </div>
+                <h1>Welcome to Sheets!</h1>
+                <p class="tagline">The ultimate game of chance, guts, and guessing. Simple to learn but impossible to master, Sheets is the perfect card game for any gathering. All you need is a couple of decks of cards, some friends, and the nerve to bet it all.</p>
+                <p class="challenge">Do you have what it takes to predict the cards and take the pot?</p>
+                <button id="getStartedBtn" class="get-started-btn">Get Started</button>
+            </div>
+
+            <div class="rules-section">
+                <h2>How to Play 🃏</h2>
+                <p class="rules-intro">Sheets is a straightforward betting game played in a circle. The goal is simple: bet on whether the next card drawn will fall numerically between the two cards on the table.</p>
+                
+                <div class="rules-grid">
+                    <div class="rule-card">
+                        <h3>The Setup</h3>
+                        <ul>
+                            <li><strong>Gather 'Round:</strong> Everyone sits in a circle, and one person is designated as the dealer.</li>
+                            <li><strong>Ante Up:</strong> To start the game and build the pot, every player throws one chip (e.g., $0.50) into the center. This is done every time the pot is emptied.</li>
+                            <li><strong>The Deal:</strong> The dealer shuffles multiple decks of cards together and places two cards face up on the table, leaving a space between them. For example, a 4 and a 9.</li>
+                        </ul>
+                    </div>
+
+                    <div class="rule-card">
+                        <h3>The Bet</h3>
+                        <ul>
+                            <li>It's your turn. You look at the two cards (the "sheets"), say a 4 and a 9.</li>
+                            <li>You must decide if the next card will land between them (a 5, 6, 7, or 8).</li>
+                            <li>You can bet any amount up to the current total value of the pot. Let's say the pot has $5; you can bet anything from $0.50 to $5.</li>
+                        </ul>
+                    </div>
+
+                    <div class="rule-card">
+                        <h3>The Reveal</h3>
+                        <ul>
+                            <li><strong class="win-text">You Win! ✅</strong> If the card falls between the two sheets (e.g., a 7), you take your bet amount from the pot. The pot is now smaller, and the turn passes to the next player.</li>
+                            <li><strong class="lose-text">You Lose! ❌</strong> If the card is outside the two sheets (e.g., a Jack), you lose your bet. Your money is added to the pot, making it bigger for the next player.</li>
+                            <li><strong class="post-text">You Hit the Post! 😬</strong> If the card is the same value as one of the sheets (e.g., another 4 or another 9), that's a post. You must pay a penalty by doubling your original bet and adding it to the pot. For example, if you bet $3 and hit a post, you add $6 to the pot.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="keyboard-shortcuts">
+                    <h3>⌨️ Keyboard Shortcuts</h3>
+                    <div class="shortcuts-grid">
+                        <div class="shortcut"><kbd>B</kbd> - Place Bet</div>
+                        <div class="shortcut"><kbd>P</kbd> - Bet Pot</div>
+                        <div class="shortcut"><kbd>Space</kbd> - Pass</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaderboard -->
+    <div id="leaderboard" class="leaderboard" style="display: none;">
         <h3>Leaderboard</h3>
         <table>
             <thead>
@@ -26,7 +85,8 @@
         </table>
     </div>
 
-    <div id="buyInScreen" class="modal-overlay">
+    <!-- Buy-in Screen -->
+    <div id="buyInScreen" class="modal-overlay" style="display: none;">
         <div class="modal-content">
             <h2>Buy-in to the Game</h2>
             <p>Enter your name and buy-in amount.</p>
@@ -84,8 +144,9 @@
     
         <div class="action-area" id="actionArea" style="display: none;">
             <input type="number" id="betInput" step="0.01" placeholder="Enter bet">
-            <button id="betButton">Bet</button>
-            <button id="passButton">Pass</button>
+            <button id="betButton">Bet <kbd>B</kbd></button>
+            <button id="potButton" class="pot-btn">Pot <kbd>P</kbd></button>
+            <button id="passButton">Pass <kbd>Space</kbd></button>
             <button id="creditButton" class="credit-btn">Credit</button>
         </div>
 
@@ -97,7 +158,7 @@
         <button id="sixSevenBtn" class="six-seven-btn" style="display: none;">6-7!</button>
     </div>
 
-    <div id="chat-container" class="chat-container">
+    <div id="chat-container" class="chat-container" style="display: none;">
         <div id="chat-window" class="chat-window"></div>
         <div class="chat-input-area">
             <input type="text" id="chat-input" placeholder="Type a message...">
