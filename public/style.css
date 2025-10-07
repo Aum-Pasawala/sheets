@@ -534,6 +534,7 @@ button kbd {
 }
 
 /* Leaderboard */
+/* Leaderboard */
 .leaderboard {
   position: fixed;
   top: 20px;
@@ -569,8 +570,12 @@ button kbd {
 .leaderboard .net-positive {
   color: #2ecc71;
   font-weight: bold;
+  color: #2ecc71;
+  font-weight: bold;
 }
 .leaderboard .net-negative {
+  color: #e74c3c;
+  font-weight: bold;
   color: #e74c3c;
   font-weight: bold;
 }
@@ -722,12 +727,28 @@ button kbd {
   70% { transform: translate(-10px, -2px) rotate(-5deg); }
   80% { transform: translate(10px, 2px) rotate(5deg); }
   90% { transform: translate(-5px, 0px) rotate(-2deg); }
+  0%, 100% { transform: translate(0) rotate(0); }
+  10% { transform: translate(-20px, -5px) rotate(-10deg); }
+  20% { transform: translate(20px, 5px) rotate(10deg); }
+  30% { transform: translate(-30px, -10px) rotate(-15deg); }
+  40% { transform: translate(30px, 10px) rotate(15deg); }
+  50% { transform: translate(-20px, -5px) rotate(-10deg); }
+  60% { transform: translate(20px, 5px) rotate(10deg); }
+  70% { transform: translate(-10px, -2px) rotate(-5deg); }
+  80% { transform: translate(10px, 2px) rotate(5deg); }
+  90% { transform: translate(-5px, 0px) rotate(-2deg); }
 }
 @keyframes post-flash {
   0%, 100% { box-shadow: 0 0 10px white; }
   50% { box-shadow: 0 0 70px orange, 0 0 70px red; }
+  0%, 100% { box-shadow: 0 0 10px white; }
+  50% { box-shadow: 0 0 70px orange, 0 0 70px red; }
 }
 @keyframes screen-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  50% { transform: translateX(8px); }
+  75% { transform: translateX(-8px); }
   0%, 100% { transform: translateX(0); }
   25% { transform: translateX(-8px); }
   50% { transform: translateX(8px); }
@@ -737,12 +758,18 @@ button kbd {
   0% { transform: translate(-50%, -50%) scale(1); }
   50% { transform: translate(-50%, -50%) scale(1.1); }
   100% { transform: translate(-50%, -50%) scale(1); }
+  0% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.1); }
+  100% { transform: translate(-50%, -50%) scale(1); }
 }
 @keyframes flash-red {
   0%, 100% { background-color: #e74c3c; }
   50% { background-color: #ff0000; }
+  0%, 100% { background-color: #e74c3c; }
+  50% { background-color: #ff0000; }
 }
 @keyframes text-pulse {
+  0%, 100% { transform: translateX(-50%) scale(1.1); }
   0%, 100% { transform: translateX(-50%) scale(1.1); }
   50% {
     transform: translateX(-50%) scale(1.15);
