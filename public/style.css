@@ -14,7 +14,7 @@ body.screen-shake {
   animation: screen-shake 0.4s ease-in-out;
 }
 
-/* The Table - Balanced Size */
+/* The Table */
 .game-table {
   width: 1100px;
   height: 700px;
@@ -30,7 +30,7 @@ body.screen-shake {
   box-sizing: border-box;
 }
 
-/* Card Styling - Larger but not overwhelming */
+/* Card Styling */
 .dealer-area {
   display: flex;
   gap: 40px;
@@ -135,7 +135,7 @@ body.screen-shake {
   font-weight: bold;
 }
 
-/* Player positions - OUTSIDE the table */
+/* Player Info */
 .player-seat {
   position: absolute;
   text-align: center;
@@ -147,61 +147,6 @@ body.screen-shake {
   min-width: 120px;
   z-index: 1002;
 }
-
-/* Positions arranged in a circle OUTSIDE the table */
-.player-pos-1 {
-  bottom: -80px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-.player-pos-2 {
-  bottom: 40px;
-  left: -160px;
-}
-.player-pos-3 {
-  top: 200px;
-  left: -180px;
-}
-.player-pos-4 {
-  top: -80px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-.player-pos-5 {
-  top: 200px;
-  right: -180px;
-}
-.player-pos-6 {
-  bottom: 40px;
-  right: -160px;
-}
-.player-pos-7 {
-  bottom: 300px;
-  left: -200px;
-}
-.player-pos-8 {
-  top: 450px;
-  left: -200px;
-}
-.player-pos-9 {
-  top: 500px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-.player-pos-10 {
-  top: 450px;
-  right: -200px;
-}
-.player-pos-11 {
-  bottom: 300px;
-  right: -200px;
-}
-.player-pos-12 {
-  bottom: 200px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
 .player-name {
   font-weight: bold;
   margin-bottom: 8px;
@@ -219,6 +164,7 @@ body.screen-shake {
   border: 2px solid white;
 }
 
+/* Message */
 .message-area {
   position: absolute;
   top: 330px;
@@ -243,7 +189,7 @@ body.screen-shake {
   text-shadow: 0 0 15px rgba(255, 204, 0, 0.8);
 }
 
-/* Action controls */
+/* Action Controls */
 .action-area {
   position: absolute;
   bottom: 30px;
@@ -252,12 +198,6 @@ body.screen-shake {
   background-color: rgba(0, 70, 0, 0.7);
   padding: 12px;
   border-radius: 10px;
-}
-.credit-btn {
-  background-color: #27ae60;
-}
-.credit-btn:hover {
-  background-color: #2ecc71;
 }
 input[type="number"] {
   width: 110px;
@@ -280,6 +220,28 @@ button:hover {
   background-color: #34495e;
 }
 
+/* Credit Button */
+.credit-btn {
+  background-color: #27ae60;
+}
+.credit-btn:hover {
+  background-color: #2ecc71;
+}
+
+/* NEW: Pot Button */
+.pot-btn {
+  background-color: #00ff99;
+  color: #000;
+  font-weight: bold;
+  border: 2px solid #00e68a;
+  box-shadow: 0 0 10px #00ff99;
+}
+.pot-btn:hover {
+  background-color: #00e68a;
+  box-shadow: 0 0 20px #00ff99;
+}
+
+/* Cancel Button */
 .cancel-btn {
   background-color: #7f8c8d;
 }
@@ -316,7 +278,7 @@ button:hover {
   margin: 10px;
 }
 
-/* Leaderboard - Larger */
+/* Leaderboard */
 .leaderboard {
   position: fixed;
   top: 20px;
@@ -350,14 +312,15 @@ button:hover {
   background-color: rgba(41, 128, 185, 0.4);
 }
 .leaderboard .net-positive {
-    color: #2ecc71;
-    font-weight: bold;
+  color: #2ecc71;
+  font-weight: bold;
 }
 .leaderboard .net-negative {
-    color: #e74c3c;
-    font-weight: bold;
+  color: #e74c3c;
+  font-weight: bold;
 }
 
+/* Settings */
 .settings-area {
   position: fixed;
   top: 20px;
@@ -493,91 +456,38 @@ button:hover {
     transform: translateY(0) rotateY(0deg);
   }
 }
-
 @keyframes insane-shake {
-  0%,
-  100% {
-    transform: translate(0) rotate(0);
-  }
-  10% {
-    transform: translate(-20px, -5px) rotate(-10deg);
-  }
-  20% {
-    transform: translate(20px, 5px) rotate(10deg);
-  }
-  30% {
-    transform: translate(-30px, -10px) rotate(-15deg);
-  }
-  40% {
-    transform: translate(30px, 10px) rotate(15deg);
-  }
-  50% {
-    transform: translate(-20px, -5px) rotate(-10deg);
-  }
-  60% {
-    transform: translate(20px, 5px) rotate(10deg);
-  }
-  70% {
-    transform: translate(-10px, -2px) rotate(-5deg);
-  }
-  80% {
-    transform: translate(10px, 2px) rotate(5deg);
-  }
-  90% {
-    transform: translate(-5px, 0px) rotate(-2deg);
-  }
+  0%, 100% { transform: translate(0) rotate(0); }
+  10% { transform: translate(-20px, -5px) rotate(-10deg); }
+  20% { transform: translate(20px, 5px) rotate(10deg); }
+  30% { transform: translate(-30px, -10px) rotate(-15deg); }
+  40% { transform: translate(30px, 10px) rotate(15deg); }
+  50% { transform: translate(-20px, -5px) rotate(-10deg); }
+  60% { transform: translate(20px, 5px) rotate(10deg); }
+  70% { transform: translate(-10px, -2px) rotate(-5deg); }
+  80% { transform: translate(10px, 2px) rotate(5deg); }
+  90% { transform: translate(-5px, 0px) rotate(-2deg); }
 }
 @keyframes post-flash {
-  0%,
-  100% {
-    box-shadow: 0 0 10px white;
-  }
-  50% {
-    box-shadow: 0 0 70px orange, 0 0 70px red;
-  }
+  0%, 100% { box-shadow: 0 0 10px white; }
+  50% { box-shadow: 0 0 70px orange, 0 0 70px red; }
 }
 @keyframes screen-shake {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  25% {
-    transform: translateX(-8px);
-  }
-  50% {
-    transform: translateX(8px);
-  }
-  75% {
-    transform: translateX(-8px);
-  }
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  50% { transform: translateX(8px); }
+  75% { transform: translateX(-8px); }
 }
 @keyframes pulse {
-  0% {
-    transform: translate(-50%, -50%) scale(1);
-  }
-  50% {
-    transform: translate(-50%, -50%) scale(1.1);
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(1);
-  }
+  0% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.1); }
+  100% { transform: translate(-50%, -50%) scale(1); }
 }
 @keyframes flash-red {
-  0%,
-  100% {
-    background-color: #e74c3c;
-  }
-  50% {
-    background-color: #ff0000;
-  }
+  0%, 100% { background-color: #e74c3c; }
+  50% { background-color: #ff0000; }
 }
 @keyframes text-pulse {
-  0%,
-  100% {
-    transform: translateX(-50%) scale(1.1);
-  }
-  50% {
-    transform: translateX(-50%) scale(1.15);
-    text-shadow: 0 0 20px rgba(255, 204, 0, 1);
-  }
+  0%, 100% { transform: translateX(-50%) scale(1.1); }
+  50% { transform: translateX(-50%) scale(1.15); text-shadow: 0 0 20px rgba(255, 204, 0, 1); }
 }

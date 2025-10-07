@@ -11,7 +11,7 @@ const aceHighBtn = document.getElementById('aceHighBtn');
 const creditScreen = document.getElementById('creditScreen');
 const creditInput = document.getElementById('creditInput');
 const addCreditBtn = document.getElementById('addCreditBtn');
-const cancelCreditBtn = document.getElementById('cancelCreditBtn'); // ADDED cancel button element
+const cancelCreditBtn = document.getElementById('cancelCreditBtn');
 const gameTable = document.getElementById('gameTable');
 const startGameBtn = document.getElementById('startGameBtn');
 const card1Elem = document.getElementById('card1');
@@ -21,6 +21,7 @@ const potAmountElem = document.getElementById('potAmount');
 const messageElem = document.getElementById('message');
 const betInput = document.getElementById('betInput');
 const betButton = document.getElementById('betButton');
+const betPotButton = document.getElementById('betPotButton'); // ✅ NEW POT BUTTON
 const passButton = document.getElementById('passButton');
 const creditButton = document.getElementById('creditButton');
 const playersArea = document.getElementById('players-area');
@@ -35,6 +36,7 @@ const chatSendBtn = document.getElementById('chat-send-btn');
 const body = document.querySelector('body');
 
 let myPlayerId = null;
+let currentGameState = {};
 
 // --- Sound Effects ---
 let soundsReady = false;
@@ -42,7 +44,6 @@ const synth = new Tone.PolySynth(Tone.Synth).toDestination();
 const sounds = {
     cardSlide: () => synth.triggerAttackRelease("G2", "16n", Tone.now(), 0.1),
     cardFlip: () => synth.triggerAttackRelease("C#5", "8n"),
-    // ADDED a "cha-ching" style cash sound
     cash: () => {
         const now = Tone.now();
         synth.triggerAttackRelease("A5", "16n", now);
@@ -65,9 +66,7 @@ document.body.addEventListener('click', async () => {
 // --- Render Functions ---
 function renderCard(element, card, isFaceUp = false) {
     const front = element.querySelector('.card-front');
-    
     element.className = 'card';
-    
     if (!card) {
         front.innerHTML = '';
         if (element.id === 'nextCard') {
@@ -80,14 +79,9 @@ function renderCard(element, card, isFaceUp = false) {
 
     const color = (card.suit === '♥' || card.suit === '♦') ? 'red' : 'black';
     element.classList.add(color, 'visible');
-    
     front.innerHTML = `<span class="top">${card.rank}${card.suit}</span><span>${card.suit}</span><span class="bottom">${card.rank}${card.suit}</span>`;
-    
-    if (isFaceUp) {
-        element.classList.add('is-flipping');
-    }
+    if (isFaceUp) element.classList.add('is-flipping');
 }
-
 
 function addChatMessage(data) {
     const p = document.createElement('p');
@@ -111,10 +105,8 @@ function updateLeaderboard(players, playerStats, myId) {
         const netCash = player.chips - player.totalBuyIn;
         const netClass = netCash > 0 ? 'net-positive' : (netCash < 0 ? 'net-negative' : '');
         const netDisplay = (netCash >= 0 ? '+' : '-') + '$' + Math.abs(netCash).toFixed(2);
-
         const row = document.createElement('tr');
         if (pId === myId) row.classList.add('my-row');
-
         row.innerHTML = `
             <td>${player.name}</td>
             <td>$${player.totalBuyIn.toFixed(2)}</td>
@@ -153,19 +145,36 @@ addCreditBtn.addEventListener('click', () => {
         sounds.click();
     }
 });
-// ADDED event listener for the new cancel button
 cancelCreditBtn.addEventListener('click', () => {
     creditInput.value = '';
     creditScreen.style.display = 'none';
     sounds.click();
 });
+
 startGameBtn.addEventListener('click', () => {
     socket.emit('startGame');
     sounds.click();
 });
+
 aceLowBtn.addEventListener('click', () => { socket.emit('aceChoice', 'low'); aceChoiceScreen.style.display = 'none'; sounds.click(); });
 aceHighBtn.addEventListener('click', () => { socket.emit('aceChoice', 'high'); aceChoiceScreen.style.display = 'none'; sounds.click(); });
-betButton.addEventListener('click', () => { socket.emit('playerBet', parseFloat(betInput.value)); betInput.value = ''; sounds.click(); });
+
+betButton.addEventListener('click', () => {
+    socket.emit('playerBet', parseFloat(betInput.value));
+    betInput.value = '';
+    sounds.click();
+});
+
+// ✅ NEW: Pot button — bets entire pot
+betPotButton.addEventListener('click', () => {
+    if (currentGameState && currentGameState.pot) {
+        socket.emit('playerBet', currentGameState.pot);
+        sounds.click();
+    } else {
+        alert("Pot value not available yet!");
+    }
+});
+
 passButton.addEventListener('click', () => { socket.emit('playerPass'); sounds.click(); });
 potRebuildInput.addEventListener('change', () => { socket.emit('setPotRebuild', parseFloat(potRebuildInput.value)); });
 sixSevenBtn.addEventListener('click', () => { socket.emit('pressed67'); sixSevenBtn.style.display = 'none'; sounds.click(); });
@@ -177,22 +186,24 @@ chatSendBtn.addEventListener('click', () => {
 });
 chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') chatSendBtn.click(); });
 
-
-// --- Socket.IO Event Listeners ---
+// --- Socket.IO Listeners ---
 socket.on('connect', () => { myPlayerId = socket.id; });
 
 socket.on('gameState', (state) => {
+    currentGameState = state;
     potAmountElem.textContent = `$${state.pot.toFixed(2)}`;
     potRebuildInput.disabled = (state.gameAdminId !== myPlayerId);
     potRebuildInput.title = potRebuildInput.disabled ? "Only the admin can set this value." : "You are the admin.";
     potRebuildInput.value = state.potRebuildAmount.toFixed(2);
     
+    // Admin start visibility
     if (state.gameAdminId === myPlayerId && !state.isGameRunning && state.playerOrder.length >= 3) {
         startGameBtn.style.display = 'block';
     } else {
         startGameBtn.style.display = 'none';
     }
 
+    // Render players
     playersArea.innerHTML = '';
     state.playerOrder.forEach((playerId, index) => {
         const player = state.players[playerId];
@@ -205,7 +216,15 @@ socket.on('gameState', (state) => {
         if (playerId === myPlayerId) playerDiv.classList.add('my-seat');
         playersArea.appendChild(playerDiv);
     });
-    actionArea.style.display = (state.isGameRunning && state.currentPlayerId === myPlayerId && !state.isWaitingForAceChoice) ? 'flex' : 'none';
+
+    // Enable actions only when it's my turn
+    const myTurn = state.isGameRunning && state.currentPlayerId === myPlayerId && !state.isWaitingForAceChoice;
+    actionArea.style.display = myTurn ? 'flex' : 'none';
+    betInput.disabled = !myTurn;
+    betButton.disabled = !myTurn;
+    betPotButton.disabled = !myTurn;
+    passButton.disabled = !myTurn;
+    creditButton.disabled = !myTurn;
 
     updateLeaderboard(state.players, state.playerStats, myPlayerId);
 });
@@ -214,7 +233,7 @@ socket.on('dealCard', (data) => {
     const elem = data.cardSlot === 1 ? card1Elem : card2Elem;
     renderCard(elem, data.card, true);
     elem.classList.add('slide-in');
-    if(soundsReady) sounds.cardSlide();
+    if (soundsReady) sounds.cardSlide();
 });
 
 socket.on('dealMiddleCardPlaceholder', () => {
@@ -222,7 +241,6 @@ socket.on('dealMiddleCardPlaceholder', () => {
     nextCardElem.classList.add('slide-in');
     if (soundsReady) sounds.cardSlide();
 });
-
 
 socket.on('promptAceChoice', () => { aceChoiceScreen.style.display = 'flex'; });
 
@@ -240,7 +258,7 @@ socket.on('cardResult', (data) => {
             const cardFace = nextCardElem.querySelector('.card-front');
             cardFace.classList.add('post-hit');
             body.classList.add('screen-shake');
-            if(soundsReady) sounds.post();
+            if (soundsReady) sounds.post();
         }, data.isDramatic ? 1250 : 600);
         setTimeout(() => {
             const cardFace = nextCardElem.querySelector('.card-front');
@@ -265,7 +283,6 @@ socket.on('message', (data) => {
         messageElem.classList.remove('emphasis');
     }
     if (data.actorId === myPlayerId) {
-        // CHANGED sounds.win() to the new sounds.cash()
         if (data.outcome === 'win' && soundsReady) sounds.cash();
         if (data.outcome === 'loss' && soundsReady) sounds.lose();
     }
