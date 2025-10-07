@@ -43,6 +43,7 @@ let myPlayerId = null;
 let currentPotValue = 0;
 let playerStreaks = {}; // Track consecutive losses/posts
 let isVideoPlaying = false; // Track if post video is playing
+let canBet = false; // Prevent betting before second card is shown
 
 // --- Sound Effects ---
 let soundsReady = false;
@@ -196,18 +197,29 @@ startGameBtn.addEventListener('click', () => {
 });
 aceLowBtn.addEventListener('click', () => { socket.emit('aceChoice', 'low'); aceChoiceScreen.style.display = 'none'; sounds.click(); });
 aceHighBtn.addEventListener('click', () => { socket.emit('aceChoice', 'high'); aceChoiceScreen.style.display = 'none'; sounds.click(); });
-betButton.addEventListener('click', () => { 
+
+betButton.addEventListener('click', () => {
+    if (!canBet) return; // Don't allow bet until second card is shown
     const betAmount = parseFloat(betInput.value);
     if (betAmount > 0) {
+        canBet = false; // Disable betting after placing bet
         socket.emit('playerBet', betAmount); 
         betInput.value = ''; 
         if (soundsReady) sounds.chips();
     }
 });
-passButton.addEventListener('click', () => { socket.emit('playerPass'); sounds.click(); });
+
+passButton.addEventListener('click', () => {
+    if (!canBet) return; // Don't allow pass until second card is shown
+    canBet = false; // Disable after passing
+    socket.emit('playerPass'); 
+    sounds.click(); 
+});
 
 potButton.addEventListener('click', () => {
+    if (!canBet) return; // Don't allow pot bet until second card is shown
     if (currentPotValue > 0) {
+        canBet = false; // Disable betting after placing bet
         socket.emit('playerBet', currentPotValue);
         if (soundsReady) sounds.chips();
     }
@@ -216,19 +228,24 @@ potButton.addEventListener('click', () => {
 // ✅ KEYBOARD SHORTCUTS
 document.addEventListener('keydown', (e) => {
     // Don't trigger if typing in input fields or modals visible
-    if (e.target.tagName === 'INPUT' || creditScreen.style.display === 'flex' || aceChoiceScreen.style.display === 'flex') {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return;
+    }
+    if (creditScreen.style.display === 'flex' || aceChoiceScreen.style.display === 'flex' || buyInScreen.style.display === 'flex') {
         return;
     }
     
-    // Only work when action area is visible (your turn)
-    if (actionArea.style.display !== 'flex') return;
+    // Only work when action area is visible (your turn) AND can bet
+    if (actionArea.style.display !== 'flex' || !canBet) return;
 
     if (e.key === ' ' || e.key === 'Spacebar') {
         e.preventDefault();
         passButton.click();
     } else if (e.key === 'b' || e.key === 'B') {
         e.preventDefault();
-        betButton.click();
+        if (betInput.value) {
+            betButton.click();
+        }
     } else if (e.key === 'p' || e.key === 'P') {
         e.preventDefault();
         potButton.click();
@@ -246,7 +263,17 @@ chatSendBtn.addEventListener('click', () => {
 chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') chatSendBtn.click(); });
 
 // --- Socket.IO Event Listeners ---
-socket.on('connect', () => { myPlayerId = socket.id; });
+socket.on('connect', () => { 
+    myPlayerId = socket.id;
+    console.log('Connected with ID:', myPlayerId);
+    
+    // Check if video exists
+    if (postVideo) {
+        console.log('Post video element found');
+    } else {
+        console.error('Post video element NOT found!');
+    }
+});
 
 socket.on('gameState', (state) => {
     currentPotValue = state.pot;
@@ -298,6 +325,9 @@ socket.on('dealMiddleCardPlaceholder', () => {
     renderCard(nextCardElem, null, false);
     nextCardElem.classList.add('slide-in');
     if (soundsReady) sounds.cardSlide();
+    
+    // Enable betting after second card is dealt
+    canBet = true;
 });
 
 socket.on('promptAceChoice', () => { aceChoiceScreen.style.display = 'flex'; });
@@ -317,7 +347,55 @@ socket.on('cardResult', (data) => {
             cardFace.classList.add('post-hit');
             body.classList.add('screen-shake');
             if(soundsReady) sounds.post();
+            
+            // Play post video
+            if (postVideo && !isVideoPlaying) {
+                isVideoPlaying = true;
+                postVideo.style.display = 'block';
+                postVideo.currentTime = 0;
+                postVideo.volume = 1.0;
+                
+                // Play the video
+                const playPromise = postVideo.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        console.log('Post video playing');
+                        
+                        // Monitor time and stop at 15 seconds
+                        const checkTime = setInterval(() => {
+                            if (postVideo.currentTime >= 15) {
+                                postVideo.pause();
+                                postVideo.style.display = 'none';
+                                isVideoPlaying = false;
+                                clearInterval(checkTime);
+                                console.log('Post video stopped at 15s');
+                            }
+                        }, 100);
+                        
+                    }).catch(error => {
+                        console.error('Video play failed:', error);
+                        postVideo.style.display = 'none';
+                        isVideoPlaying = false;
+                    });
+                }
+                
+                // Handle video ending naturally
+                postVideo.onended = () => {
+                    postVideo.style.display = 'none';
+                    isVideoPlaying = false;
+                    console.log('Post video ended');
+                };
+                
+                // Handle errors
+                postVideo.onerror = () => {
+                    console.error('Video error - check if post.mp4 exists in public folder');
+                    postVideo.style.display = 'none';
+                    isVideoPlaying = false;
+                };
+            }
         }, data.isDramatic ? 1250 : 600);
+        
         setTimeout(() => {
             const cardFace = nextCardElem.querySelector('.card-front');
             cardFace.classList.remove('post-hit');
@@ -329,7 +407,8 @@ socket.on('cardResult', (data) => {
 socket.on('clearResult', () => { 
     renderCard(nextCardElem, null, false); 
     renderCard(card1Elem, null, false); 
-    renderCard(card2Elem, null, false); 
+    renderCard(card2Elem, null, false);
+    canBet = false; // Disable betting when clearing for new turn
 });
 
 socket.on('message', (data) => {
