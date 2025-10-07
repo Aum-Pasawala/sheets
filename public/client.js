@@ -25,6 +25,28 @@ const potButton = document.getElementById('potButton'); // ✅ NEW: Pot button r
 const passButton = document.getElementById('passButton');
 const creditButton = document.getElementById('creditButton');
 const playersArea = document.getElementById('players-area');
+const tableBetsArea = document.getElementById('table-bets');
+    // Render bet chips on table
+    if (tableBetsArea) {
+        tableBetsArea.innerHTML = '';
+        const centerX = 550; // half of .game-table width
+        const centerY = 350; // half of .game-table height
+        const radius = 250;
+        const n = state.playerOrder.length;
+        state.playerOrder.forEach((playerId, idx) => {
+            if (!currentBets[playerId]) return;
+            // Arrange chips in a circle
+            const angle = (2 * Math.PI * idx) / n - Math.PI / 2;
+            const x = centerX + radius * Math.cos(angle) - 27;
+            const y = centerY + radius * Math.sin(angle) - 27;
+            const chip = document.createElement('div');
+            chip.className = 'table-bet-chip';
+            chip.style.left = `${x}px`;
+            chip.style.top = `${y}px`;
+            chip.textContent = currentBets[playerId];
+            tableBetsArea.appendChild(chip);
+        });
+    }
 // Store bets for current hand
 let currentBets = {};
 const actionArea = document.getElementById('actionArea');
