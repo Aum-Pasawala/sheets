@@ -242,7 +242,11 @@ socket.on('connect', () => {
   }
 });
 
+// *** MAIN: gameState handler (updated to restore original bet bar behavior) ***
 socket.on('gameState', (state) => {
+  // debug/log to help verify why action bar may not appear
+  console.log('gameState:', { currentPlayerId: state.currentPlayerId, myPlayerId, isGameRunning: state.isGameRunning });
+
   currentPotValue = state.pot;
   potAmountElem.textContent = `$${state.pot.toFixed(2)}`;
   potRebuildInput.disabled = (state.gameAdminId !== myPlayerId);
@@ -268,18 +272,17 @@ socket.on('gameState', (state) => {
     playersArea.appendChild(div);
   });
 
-  // ✅ FIX: bet bar appears properly when it's my turn
-  actionArea.style.display =
-    (state.isGameRunning && state.currentPlayerId === myPlayerId)
-      ? 'flex'
-      : 'none';
+  // === RESTORE ORIGINAL BEHAVIOR ===
+  // Show the bet/pot/pass bar whenever it's my turn (regardless of isGameRunning or ace waiting).
+  // This mirrors the original behavior you described.
+  actionArea.style.display = (state.currentPlayerId === myPlayerId) ? 'flex' : 'none';
 
   updateLeaderboard(state.players, state.playerStats, myPlayerId);
 });
 
 socket.on('dealCard', (data) => {
   const elem = data.cardSlot === 1 ? card1Elem : card2Elem;
-  // ✅ FIX: side cards face-up (no flipping)
+  // side cards come in face-up (no flipping)
   renderCard(elem, data.card, false);
   elem.classList.remove('slide-in-left', 'slide-in-right', 'slide-in-middle');
   elem.classList.add(data.cardSlot === 1 ? 'slide-in-left' : 'slide-in-right');
