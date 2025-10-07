@@ -417,15 +417,28 @@ socket.on('dealMiddleCardPlaceholder', () => {
 socket.on('promptAceChoice', () => aceChoiceScreen.style.display = 'flex');
 
 socket.on('cardResult', (data) => {
-  renderCard(nextCardElem, data.card);
-  nextCardElem.classList.add('visible');
+  // Render the actual card value on the middle card
+  const front = nextCardElem.querySelector('.card-front');
+  const color = (data.card.suit === '♥' || data.card.suit === '♦') ? 'red' : 'black';
+  
+  // Clear and set card classes
+  nextCardElem.className = 'card card-middle visible';
+  nextCardElem.classList.add(color);
+  
+  // Set the card content
+  front.innerHTML = `
+    <span class="top">${data.card.rank}${data.card.suit}</span>
+    <span>${data.card.suit}</span>
+    <span class="bottom">${data.card.rank}${data.card.suit}</span>
+  `;
   
   if (data.isDramatic) nextCardElem.classList.add('dramatic-flip');
   
-  // Flip the middle card to show the result
+  // Flip the card to show face after a brief delay
   setTimeout(() => {
-    nextCardElem.style.transform = 'rotateY(0deg)'; // Flip to face-up
+    nextCardElem.style.transform = 'rotateY(0deg)'; // Flip from 180deg to 0deg
     if (soundsReady) sounds.cardFlip();
+    console.log('Middle card flipped:', data.card);
   }, 100);
 
   if (data.isPost) {
@@ -474,8 +487,6 @@ socket.on('cardResult', (data) => {
       if (face) face.classList.remove('post-hit');
     }, data.isDramatic ? 2200 : 1500);
   }
-  
-  console.log('Middle card revealed:', data.card, 'Transform:', nextCardElem.style.transform);
 });
 
 socket.on('clearResult', () => {
