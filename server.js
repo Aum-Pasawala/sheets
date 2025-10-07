@@ -30,6 +30,9 @@ let isWaitingForAceChoice = false;
 let is67ChallengeActive = false;
 let sixSevenPresses = [];
 
+// Track current hand bets
+let currentBets = {};
+
 // --- Helper Functions ---
 function initializeDeck() {
     const suits = ['♥', '♦', '♣', '♠'];
@@ -98,6 +101,9 @@ async function startNewTurn() {
     }
 
     io.emit('clearResult');
+    // Reset current bets for new hand
+    currentBets = {};
+    io.emit('updateBets', {});
 
     if (pot <= 0) {
         let playersInGame = 0;
@@ -169,6 +175,14 @@ async function dealSecondCard() {
         players[currentPlayerId].chips -= penalty;
         pot += penalty;
         broadcastMessage(`Same cards! ${players[currentPlayerId].name} pays $${penalty.toFixed(2)} and passes.`, true);
+        setTimeout(startNewTurn, 2000);
+        return;
+    }
+
+    // If the difference is exactly 1, skip turn
+    if (Math.abs(currentCards[0].value - currentCards[1].value) === 1) {
+        const currentPlayerId = playerOrder[currentPlayerIndex];
+        broadcastMessage(`Cards are consecutive! ${players[currentPlayerId].name}'s turn is skipped.`, true);
         setTimeout(startNewTurn, 2000);
         return;
     }
@@ -279,6 +293,11 @@ io.on('connection', (socket) => {
             socket.emit('message', { text: "Invalid bet." });
             return;
         }
+        // Track the player's bet for this hand
+        currentBets[socket.id] = betAmount;
+        // Emit updated bets to all clients (but only before third card is shown)
+        io.emit('updateBets', currentBets);
+
         const nextCard = deck.pop();
         const [lowCard, highCard] = currentCards;
         let messageText, isPost = false, outcome;
@@ -297,10 +316,10 @@ io.on('connection', (socket) => {
             player.chips -= betAmount; pot += betAmount; outcome = "loss";
             playerStats[player.id].losses++;
         }
-        
+
         const isDramatic = betAmount >= 40;
         io.emit('cardResult', { card: nextCard, isPost, isDramatic });
-        
+
         setTimeout(() => {
             broadcastMessage(messageText, true, player.id, outcome);
             setTimeout(startNewTurn, 2500);

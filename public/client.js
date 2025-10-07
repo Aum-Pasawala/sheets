@@ -25,6 +25,8 @@ const potButton = document.getElementById('potButton'); // ✅ NEW: Pot button r
 const passButton = document.getElementById('passButton');
 const creditButton = document.getElementById('creditButton');
 const playersArea = document.getElementById('players-area');
+// Store bets for current hand
+let currentBets = {};
 const actionArea = document.getElementById('actionArea');
 const potRebuildInput = document.getElementById('potRebuildInput');
 const leaderboardBody = document.getElementById('leaderboard-body');
@@ -207,11 +209,33 @@ socket.on('gameState', (state) => {
         const playerDiv = document.createElement('div');
         playerDiv.className = `player-seat player-pos-${index + 1}`;
         const adminMarker = (playerId === state.gameAdminId) ? ' &#9733;' : '';
-        playerDiv.innerHTML = `<div class="player-name">${player.name}${adminMarker}</div><div class="player-chips">$${player.chips.toFixed(2)}</div>`;
+        let betHtml = '';
+        if (currentBets[playerId]) {
+            betHtml = `<div class="player-bet">${currentBets[playerId]}</div>`;
+        }
+        playerDiv.innerHTML = `<div class="player-name">${player.name}${adminMarker}</div><div class="player-chips">$${player.chips.toFixed(2)}</div>${betHtml}`;
         if (playerId === state.currentPlayerId) playerDiv.classList.add('current-turn');
         if (playerId === myPlayerId) playerDiv.classList.add('my-seat');
         playersArea.appendChild(playerDiv);
     });
+// Listen for bet updates from server
+socket.on('updateBets', (bets) => {
+    currentBets = bets || {};
+    // Force re-render of player area to show bets
+    // (simulate gameState update but only update bets visually)
+    const state = window.lastGameState;
+    if (state) {
+        socket.emit('requestGameState'); // or trigger a re-render if you have a better way
+    }
+});
+
+// Patch: store last game state for bet rendering
+const origGameStateHandler = socket.listeners('gameState')[0];
+socket.off('gameState');
+socket.on('gameState', (state) => {
+    window.lastGameState = state;
+    origGameStateHandler(state);
+});
     actionArea.style.display = (state.isGameRunning && state.currentPlayerId === myPlayerId && !state.isWaitingForAceChoice) ? 'flex' : 'none';
 
     updateLeaderboard(state.players, state.playerStats, myPlayerId);
@@ -239,7 +263,7 @@ socket.on('cardResult', (data) => {
     setTimeout(() => {
         nextCardElem.classList.add('is-flipping');
         if (soundsReady) sounds.cardFlip();
-    }, 100);
+    }, 30); // was 100
 
     if (data.isPost) {
         setTimeout(() => {
@@ -247,12 +271,12 @@ socket.on('cardResult', (data) => {
             cardFace.classList.add('post-hit');
             body.classList.add('screen-shake');
             if(soundsReady) sounds.post();
-        }, data.isDramatic ? 1250 : 600);
+        }, data.isDramatic ? 400 : 200); // was 1250/600
         setTimeout(() => {
             const cardFace = nextCardElem.querySelector('.card-front');
             cardFace.classList.remove('post-hit');
             body.classList.remove('screen-shake');
-        }, data.isDramatic ? 2250 : 1500);
+        }, data.isDramatic ? 900 : 400); // was 2250/1500
     }
 });
 
