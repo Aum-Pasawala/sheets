@@ -124,6 +124,7 @@ body.screen-shake {
 .center-pot {
   text-align: center;
   margin-top: 70px;
+  position: relative; /* keeps pot below input buttons */
   z-index: 10;
 }
 .pot-label {
@@ -252,6 +253,7 @@ body.screen-shake {
   background-color: rgba(0, 70, 0, 0.7);
   padding: 12px;
   border-radius: 10px;
+  z-index: 999; /* fixes input not clickable */
 }
 .credit-btn {
   background-color: #27ae60;
@@ -259,36 +261,6 @@ body.screen-shake {
 .credit-btn:hover {
   background-color: #2ecc71;
 }
-
-/* --- NEW POT BUTTON STYLING --- */
-.pot-btn {
-  background-color: #00ff99;
-  color: #000;
-  font-weight: bold;
-  border: 2px solid #00e68a;
-  box-shadow: 0 0 10px #00ff99;
-  transition: all 0.2s ease-in-out;
-}
-.pot-btn:hover {
-  background-color: #00e68a;
-  box-shadow: 0 0 20px #00ff99;
-  transform: scale(1.05);
-}
-.pot-btn:active {
-  transform: scale(0.97);
-}
-
-/* Optional glowing pulse when it’s your turn */
-@keyframes potPulse {
-  0% { box-shadow: 0 0 8px #00ff99; }
-  50% { box-shadow: 0 0 18px #00ff99; }
-  100% { box-shadow: 0 0 8px #00ff99; }
-}
-.pot-btn.active-turn {
-  animation: potPulse 1.5s infinite;
-}
-/* --- END POT BUTTON STYLING --- */
-
 input[type="number"] {
   width: 110px;
   padding: 12px;
@@ -309,12 +281,23 @@ button {
 button:hover {
   background-color: #34495e;
 }
-
 .cancel-btn {
   background-color: #7f8c8d;
 }
 .cancel-btn:hover {
   background-color: #95a5a6;
+}
+
+/* Pot button styling */
+.pot-btn {
+  background-color: #16a085;
+  color: white;
+  font-weight: bold;
+  transition: background-color 0.2s, box-shadow 0.2s;
+}
+.pot-btn:hover {
+  background-color: #1abc9c;
+  box-shadow: 0 0 10px #1abc9c;
 }
 
 /* Modals */
@@ -380,12 +363,12 @@ button:hover {
   background-color: rgba(41, 128, 185, 0.4);
 }
 .leaderboard .net-positive {
-    color: #2ecc71;
-    font-weight: bold;
+  color: #2ecc71;
+  font-weight: bold;
 }
 .leaderboard .net-negative {
-    color: #e74c3c;
-    font-weight: bold;
+  color: #e74c3c;
+  font-weight: bold;
 }
 
 .settings-area {
@@ -525,38 +508,82 @@ button:hover {
 }
 
 @keyframes insane-shake {
-  0%, 100% { transform: translate(0) rotate(0); }
-  10% { transform: translate(-20px, -5px) rotate(-10deg); }
-  20% { transform: translate(20px, 5px) rotate(10deg); }
-  30% { transform: translate(-30px, -10px) rotate(-15deg); }
-  40% { transform: translate(30px, 10px) rotate(15deg); }
-  50% { transform: translate(-20px, -5px) rotate(-10deg); }
-  60% { transform: translate(20px, 5px) rotate(10deg); }
-  70% { transform: translate(-10px, -2px) rotate(-5deg); }
-  80% { transform: translate(10px, 2px) rotate(5deg); }
-  90% { transform: translate(-5px, 0px) rotate(-2deg); }
+  0%, 100% {
+    transform: translate(0) rotate(0);
+  }
+  10% {
+    transform: translate(-20px, -5px) rotate(-10deg);
+  }
+  20% {
+    transform: translate(20px, 5px) rotate(10deg);
+  }
+  30% {
+    transform: translate(-30px, -10px) rotate(-15deg);
+  }
+  40% {
+    transform: translate(30px, 10px) rotate(15deg);
+  }
+  50% {
+    transform: translate(-20px, -5px) rotate(-10deg);
+  }
+  60% {
+    transform: translate(20px, 5px) rotate(10deg);
+  }
+  70% {
+    transform: translate(-10px, -2px) rotate(-5deg);
+  }
+  80% {
+    transform: translate(10px, 2px) rotate(5deg);
+  }
+  90% {
+    transform: translate(-5px, 0px) rotate(-2deg);
+  }
 }
 @keyframes post-flash {
-  0%, 100% { box-shadow: 0 0 10px white; }
-  50% { box-shadow: 0 0 70px orange, 0 0 70px red; }
+  0%, 100% {
+    box-shadow: 0 0 10px white;
+  }
+  50% {
+    box-shadow: 0 0 70px orange, 0 0 70px red;
+  }
 }
 @keyframes screen-shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-8px); }
-  50% { transform: translateX(8px); }
-  75% { transform: translateX(-8px); }
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-8px);
+  }
+  50% {
+    transform: translateX(8px);
+  }
+  75% {
+    transform: translateX(-8px);
+  }
 }
 @keyframes pulse {
-  0% { transform: translate(-50%, -50%) scale(1); }
-  50% { transform: translate(-50%, -50%) scale(1.1); }
-  100% { transform: translate(-50%, -50%) scale(1); }
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
 }
 @keyframes flash-red {
-  0%, 100% { background-color: #e74c3c; }
-  50% { background-color: #ff0000; }
+  0%, 100% {
+    background-color: #e74c3c;
+  }
+  50% {
+    background-color: #ff0000;
+  }
 }
 @keyframes text-pulse {
-  0%, 100% { transform: translateX(-50%) scale(1.1); }
+  0%, 100% {
+    transform: translateX(-50%) scale(1.1);
+  }
   50% {
     transform: translateX(-50%) scale(1.15);
     text-shadow: 0 0 20px rgba(255, 204, 0, 1);
