@@ -38,352 +38,408 @@ const chatInput = document.getElementById('chat-input');
 const chatSendBtn = document.getElementById('chat-send-btn');
 const body = document.querySelector('body');
 const postVideo = document.getElementById('postVideo');
-const videoBackdrop = document.getElementById('videoBackdrop');
 
 let myPlayerId = null;
 let currentPotValue = 0;
-let playerStreaks = {};
-let isVideoPlaying = false;
-let canBet = false;
+let playerStreaks = {}; // Track consecutive losses/posts
+let isVideoPlaying = false; // Track if post video is playing
+let canBet = false; // Prevent betting before second card is shown
 
 // --- Sound Effects ---
 let soundsReady = false;
 const synth = new Tone.PolySynth(Tone.Synth).toDestination();
 const sounds = {
-  cardSlide: () => synth.triggerAttackRelease("G2", "16n", Tone.now(), 0.1),
-  cardFlip: () => synth.triggerAttackRelease("C#5", "8n"),
-  cash: () => {
-    const now = Tone.now();
-    synth.triggerAttackRelease("A5", "16n", now);
-    synth.triggerAttackRelease("C6", "16n", now + 0.07);
-    synth.triggerAttackRelease("E6", "16n", now + 0.14);
-  },
-  chips: () => {
-    const now = Tone.now();
-    synth.triggerAttackRelease("D4", "32n", now);
-    synth.triggerAttackRelease("D4", "32n", now + 0.05);
-    synth.triggerAttackRelease("D4", "32n", now + 0.1);
-  },
-  lose: () => {
-    const now = Tone.now();
-    synth.triggerAttackRelease("D3", "8n", now);
-    synth.triggerAttackRelease("C3", "8n", now + 0.15);
-    synth.triggerAttackRelease("A2", "4n", now + 0.3);
-  },
-  sadTrombone: () => {
-    const now = Tone.now();
-    synth.triggerAttackRelease("D3", "8n", now);
-    synth.triggerAttackRelease("C3", "8n", now + 0.2);
-    synth.triggerAttackRelease("Bb2", "8n", now + 0.4);
-    synth.triggerAttackRelease("A2", "2n", now + 0.6);
-  },
-  post: () => synth.triggerAttackRelease(["C2", "G#2", "C3"], "2n", Tone.now(), 0.5),
-  click: () => synth.triggerAttackRelease("C7", "32n", Tone.now(), 0.3),
+    cardSlide: () => synth.triggerAttackRelease("G2", "16n", Tone.now(), 0.1),
+    cardFlip: () => synth.triggerAttackRelease("C#5", "8n"),
+    cash: () => {
+        const now = Tone.now();
+        synth.triggerAttackRelease("A5", "16n", now);
+        synth.triggerAttackRelease("C6", "16n", now + 0.07);
+        synth.triggerAttackRelease("E6", "16n", now + 0.14);
+    },
+    chips: () => {
+        const now = Tone.now();
+        synth.triggerAttackRelease("D4", "32n", now);
+        synth.triggerAttackRelease("D4", "32n", now + 0.05);
+        synth.triggerAttackRelease("D4", "32n", now + 0.1);
+    },
+    lose: () => {
+        const now = Tone.now();
+        synth.triggerAttackRelease("D3", "8n", now);
+        synth.triggerAttackRelease("C3", "8n", now + 0.15);
+        synth.triggerAttackRelease("A2", "4n", now + 0.3);
+    },
+    sadTrombone: () => {
+        const now = Tone.now();
+        synth.triggerAttackRelease("D3", "8n", now);
+        synth.triggerAttackRelease("C3", "8n", now + 0.2);
+        synth.triggerAttackRelease("Bb2", "8n", now + 0.4);
+        synth.triggerAttackRelease("A2", "2n", now + 0.6);
+    },
+    post: () => synth.triggerAttackRelease(["C2", "G#2", "C3"], "2n", Tone.now(), 0.5),
+    click: () => synth.triggerAttackRelease("C7", "32n", Tone.now(), 0.3),
 };
 
+// Initialize audio on any user interaction
 async function initAudio() {
-  if (!soundsReady) {
-    await Tone.start();
-    soundsReady = true;
-    console.log('Audio ready');
-  }
+    if (!soundsReady) {
+        await Tone.start();
+        soundsReady = true;
+        console.log('Audio is ready');
+    }
 }
+
 document.body.addEventListener('click', initAudio, { once: true });
 
 // --- Render Functions ---
 function renderCard(element, card, isFaceUp = false) {
-  const front = element.querySelector('.card-front');
-  element.className = 'card';
-  
-  if (!card) {
-    front.innerHTML = '';
-    const back = element.querySelector('.card-back');
-    back.innerHTML = '';
-    if (element.id === 'nextCard') back.innerHTML = '?';
-    return;
-  }
+    const front = element.querySelector('.card-front');
+    element.className = 'card';
+    
+    if (!card) {
+        front.innerHTML = '';
+        if (element.id === 'nextCard') {
+            const back = element.querySelector('.card-back');
+            back.innerHTML = '?';
+            element.classList.add('visible', 'card-middle');
+        }
+        return;
+    }
 
-  const color = (card.suit === '♥' || card.suit === '♦') ? 'red' : 'black';
-  element.classList.add(color, 'visible');
-  front.innerHTML = `
-    <span class="top">${card.rank}${card.suit}</span>
-    <span>${card.suit}</span>
-    <span class="bottom">${card.rank}${card.suit}</span>
-  `;
-
-  // only middle card flips; side cards stay face-up
-  if (isFaceUp) element.classList.add('is-flipping');
+    const color = (card.suit === '♥' || card.suit === '♦') ? 'red' : 'black';
+    element.classList.add(color, 'visible');
+    front.innerHTML = `<span class="top">${card.rank}${card.suit}</span><span>${card.suit}</span><span class="bottom">${card.rank}${card.suit}</span>`;
+    
+    if (isFaceUp) {
+        element.classList.add('is-flipping');
+    }
 }
 
-// --- UI Helpers ---
 function addChatMessage(data) {
-  const p = document.createElement('p');
-  if (data.isSystem) {
-    p.className = 'system-message';
-    p.textContent = data.message;
-  } else {
-    p.innerHTML = `<strong>${data.name}:</strong> ${data.message}`;
-  }
-  chatWindow.appendChild(p);
-  chatWindow.scrollTop = chatWindow.scrollHeight;
+    const p = document.createElement('p');
+    if (data.isSystem) {
+        p.className = 'system-message';
+        p.textContent = data.message;
+    } else {
+        p.innerHTML = `<strong>${data.name}:</strong> ${data.message}`;
+    }
+    chatWindow.appendChild(p);
+    chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
-function updateLeaderboard(players, stats, myId) {
-  leaderboardBody.innerHTML = '';
-  const sorted = Object.values(players).sort((a, b) => b.chips - a.chips);
-  for (const p of sorted) {
-    const s = stats[p.id] || { wins: 0, losses: 0, posts: 0 };
-    const net = p.chips - p.totalBuyIn;
-    const cls = net > 0 ? 'net-positive' : net < 0 ? 'net-negative' : '';
-    const row = document.createElement('tr');
-    if (p.id === myId) row.classList.add('my-row');
-    row.innerHTML = `
-      <td>${p.name}</td>
-      <td>$${p.totalBuyIn.toFixed(2)}</td>
-      <td class="${cls}">${net >= 0 ? '+' : '-'}$${Math.abs(net).toFixed(2)}</td>
-      <td>${s.wins}</td>
-      <td>${s.losses}</td>
-      <td>${s.posts}</td>
-    `;
-    leaderboardBody.appendChild(row);
-  }
+function updateLeaderboard(players, playerStats, myId) {
+    leaderboardBody.innerHTML = '';
+    const sortedPlayers = Object.values(players).sort((a, b) => b.chips - a.chips);
+    for (const player of sortedPlayers) {
+        const pId = player.id;
+        const stats = playerStats[pId] || { wins: 0, losses: 0, posts: 0 };
+        const netCash = player.chips - player.totalBuyIn;
+        const netClass = netCash > 0 ? 'net-positive' : (netCash < 0 ? 'net-negative' : '');
+        const netDisplay = (netCash >= 0 ? '+' : '-') + '$' + Math.abs(netCash).toFixed(2);
+        const row = document.createElement('tr');
+        if (pId === myId) row.classList.add('my-row');
+        row.innerHTML = `
+            <td>${player.name}</td>
+            <td>$${player.totalBuyIn.toFixed(2)}</td>
+            <td class="${netClass}">${netDisplay}</td>
+            <td>${stats.wins}</td>
+            <td>${stats.losses}</td>
+            <td>${stats.posts}</td>
+        `;
+        leaderboardBody.appendChild(row);
+    }
 }
 
-// --- Navigation ---
-getStartedBtn.addEventListener('click', async () => {
-  await initAudio();
-  homePage.style.display = 'none';
-  buyInScreen.style.display = 'flex';
-  sounds.click();
-});
+// --- Event Listeners ---
+if (getStartedBtn) {
+    getStartedBtn.addEventListener('click', async () => {
+        await initAudio(); // Initialize audio on first click
+        homePage.style.display = 'none';
+        buyInScreen.style.display = 'flex';
+        if (soundsReady) sounds.click();
+    });
+}
+
 joinGameBtn.addEventListener('click', () => {
-  const buy = parseFloat(buyInInput.value);
-  const name = nameInput.value || `Player ${Math.floor(Math.random() * 100)}`;
-  if (buy > 0) {
-    socket.emit('joinGame', { name, buyIn: buy });
-    buyInScreen.style.display = 'none';
-    gameTable.style.display = 'flex';
-    chatContainer.style.display = 'flex';
-    leaderboard.style.display = 'block';
+    const buyInAmount = parseFloat(buyInInput.value);
+    const playerName = nameInput.value || `Player ${Math.floor(Math.random() * 100)}`;
+    if (buyInAmount && buyInAmount > 0) {
+        socket.emit('joinGame', { name: playerName, buyIn: buyInAmount });
+        buyInScreen.style.display = 'none';
+        gameTable.style.display = 'flex';
+        chatContainer.style.display = 'flex';
+        leaderboard.style.display = 'block';
+        sounds.click();
+    }
+});
+
+creditButton.addEventListener('click', () => {
+    creditScreen.style.display = 'flex';
     sounds.click();
-  }
 });
-
-// --- Credit Controls ---
-creditButton.addEventListener('click', () => creditScreen.style.display = 'flex');
 addCreditBtn.addEventListener('click', () => {
-  const amt = parseFloat(creditInput.value);
-  if (amt > 0) socket.emit('addCredit', amt);
-  creditScreen.style.display = 'none';
-  creditInput.value = '';
+    const amount = parseFloat(creditInput.value);
+    if (amount && amount > 0) {
+        socket.emit('addCredit', amount);
+        creditInput.value = '';
+        creditScreen.style.display = 'none';
+        sounds.click();
+    }
 });
-cancelCreditBtn.addEventListener('click', () => creditScreen.style.display = 'none');
-
-// --- Game Buttons ---
-startGameBtn.addEventListener('click', () => socket.emit('startGame'));
-aceLowBtn.addEventListener('click', () => { socket.emit('aceChoice', 'low'); aceChoiceScreen.style.display = 'none'; });
-aceHighBtn.addEventListener('click', () => { socket.emit('aceChoice', 'high'); aceChoiceScreen.style.display = 'none'; });
+cancelCreditBtn.addEventListener('click', () => {
+    creditInput.value = '';
+    creditScreen.style.display = 'none';
+    sounds.click();
+});
+startGameBtn.addEventListener('click', () => {
+    socket.emit('startGame');
+    sounds.click();
+});
+aceLowBtn.addEventListener('click', () => { socket.emit('aceChoice', 'low'); aceChoiceScreen.style.display = 'none'; sounds.click(); });
+aceHighBtn.addEventListener('click', () => { socket.emit('aceChoice', 'high'); aceChoiceScreen.style.display = 'none'; sounds.click(); });
 
 betButton.addEventListener('click', () => {
-  if (!canBet) return;
-  const amt = parseFloat(betInput.value);
-  if (amt > 0) {
-    canBet = false;
-    socket.emit('playerBet', amt);
-    betInput.value = '';
-    sounds.chips();
-  }
+    if (!canBet) return; // Don't allow bet until second card is shown
+    const betAmount = parseFloat(betInput.value);
+    if (betAmount > 0) {
+        canBet = false; // Disable betting after placing bet
+        socket.emit('playerBet', betAmount); 
+        betInput.value = ''; 
+        if (soundsReady) sounds.chips();
+    }
 });
+
 passButton.addEventListener('click', () => {
-  if (!canBet) return;
-  canBet = false;
-  socket.emit('playerPass');
-  sounds.click();
+    if (!canBet) return; // Don't allow pass until second card is shown
+    canBet = false; // Disable after passing
+    socket.emit('playerPass'); 
+    sounds.click(); 
 });
+
 potButton.addEventListener('click', () => {
-  if (!canBet) return;
-  if (currentPotValue > 0) {
-    canBet = false;
-    socket.emit('playerBet', currentPotValue);
-    sounds.chips();
-  }
+    if (!canBet) return; // Don't allow pot bet until second card is shown
+    if (currentPotValue > 0) {
+        canBet = false; // Disable betting after placing bet
+        socket.emit('playerBet', currentPotValue);
+        if (soundsReady) sounds.chips();
+    }
 });
 
-// --- Keyboard Shortcuts ---
+// ✅ KEYBOARD SHORTCUTS
 document.addEventListener('keydown', (e) => {
-  const active = e.target || document.activeElement;
-  const typing = active && (active.tagName === 'TEXTAREA' ||
-    (active.tagName === 'INPUT' && (active.type === 'text' || active.id === 'chat-input')));
-  if (typing) return;
-  if (creditScreen.style.display === 'flex' || aceChoiceScreen.style.display === 'flex' || buyInScreen.style.display === 'flex') return;
-  if (actionArea.style.display !== 'flex' || !canBet) return;
+    // Don't trigger if typing in input fields or modals visible
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return;
+    }
+    if (creditScreen.style.display === 'flex' || aceChoiceScreen.style.display === 'flex' || buyInScreen.style.display === 'flex') {
+        return;
+    }
+    
+    // Only work when action area is visible (your turn) AND can bet
+    if (actionArea.style.display !== 'flex' || !canBet) return;
 
-  const key = e.key?.toLowerCase();
-  if (key === ' ') { e.preventDefault(); passButton.click(); }
-  else if (key === 'b') { e.preventDefault(); if (!betInput.value) betInput.focus(); else betButton.click(); }
-  else if (key === 'p') { e.preventDefault(); potButton.click(); }
+    if (e.key === ' ' || e.key === 'Spacebar') {
+        e.preventDefault();
+        passButton.click();
+    } else if (e.key === 'b' || e.key === 'B') {
+        e.preventDefault();
+        if (betInput.value) {
+            betButton.click();
+        }
+    } else if (e.key === 'p' || e.key === 'P') {
+        e.preventDefault();
+        potButton.click();
+    }
 });
 
-// --- Chat ---
+potRebuildInput.addEventListener('change', () => { socket.emit('setPotRebuild', parseFloat(potRebuildInput.value)); });
+sixSevenBtn.addEventListener('click', () => { socket.emit('pressed67'); sixSevenBtn.style.display = 'none'; sounds.click(); });
 chatSendBtn.addEventListener('click', () => {
-  if (chatInput.value.trim()) {
-    socket.emit('chatMessage', chatInput.value.trim());
-    chatInput.value = '';
-  }
+    if (chatInput.value.trim()) {
+        socket.emit('chatMessage', chatInput.value.trim());
+        chatInput.value = '';
+    }
 });
-chatInput.addEventListener('keypress', e => { if (e.key === 'Enter') chatSendBtn.click(); });
+chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') chatSendBtn.click(); });
 
-// --- Socket Events ---
-socket.on('connect', () => {
-  myPlayerId = socket.id;
-  if (postVideo) {
-    postVideo.playsInline = true;
-    postVideo.preload = 'auto';
-  }
+// --- Socket.IO Event Listeners ---
+socket.on('connect', () => { 
+    myPlayerId = socket.id;
+    console.log('Connected with ID:', myPlayerId);
+    
+    // Check if video exists
+    if (postVideo) {
+        console.log('Post video element found');
+    } else {
+        console.error('Post video element NOT found!');
+    }
 });
 
-// *** MAIN: gameState handler (updated to restore original bet bar behavior) ***
 socket.on('gameState', (state) => {
-  // debug/log to help verify why action bar may not appear
-  console.log('gameState:', { currentPlayerId: state.currentPlayerId, myPlayerId, isGameRunning: state.isGameRunning });
+    currentPotValue = state.pot;
+    potAmountElem.textContent = `$${state.pot.toFixed(2)}`;
+    potRebuildInput.disabled = (state.gameAdminId !== myPlayerId);
+    potRebuildInput.title = potRebuildInput.disabled ? "Only the admin can set this value." : "You are the admin.";
+    potRebuildInput.value = state.potRebuildAmount.toFixed(2);
+    
+    if (state.gameAdminId === myPlayerId && !state.isGameRunning && state.playerOrder.length >= 3) {
+        startGameBtn.style.display = 'block';
+    } else {
+        startGameBtn.style.display = 'none';
+    }
 
-  currentPotValue = state.pot;
-  potAmountElem.textContent = `$${state.pot.toFixed(2)}`;
-  potRebuildInput.disabled = (state.gameAdminId !== myPlayerId);
-  potRebuildInput.value = state.potRebuildAmount.toFixed(2);
+    playersArea.innerHTML = '';
+    state.playerOrder.forEach((playerId, index) => {
+        const player = state.players[playerId];
+        if (!player) return;
+        const playerDiv = document.createElement('div');
+        playerDiv.className = `player-seat player-pos-${index + 1}`;
+        const adminMarker = (playerId === state.gameAdminId) ? ' &#9733;' : '';
+        
+        // Check for cold streak
+        const streak = playerStreaks[playerId] || 0;
+        let streakMarker = '';
+        if (streak >= 3) {
+            streakMarker = ' <span class="cold-streak">🥶 COLD</span>';
+        }
+        
+        playerDiv.innerHTML = `<div class="player-name">${player.name}${adminMarker}${streakMarker}</div><div class="player-chips">$${player.chips.toFixed(2)}</div>`;
+        if (playerId === state.currentPlayerId) playerDiv.classList.add('current-turn');
+        if (playerId === myPlayerId) playerDiv.classList.add('my-seat');
+        playersArea.appendChild(playerDiv);
+    });
+    
+    actionArea.style.display = (state.isGameRunning && state.currentPlayerId === myPlayerId && !state.isWaitingForAceChoice) ? 'flex' : 'none';
 
-  startGameBtn.style.display =
-    (state.gameAdminId === myPlayerId && !state.isGameRunning && state.playerOrder.length >= 3)
-      ? 'block' : 'none';
-
-  playersArea.innerHTML = '';
-  state.playerOrder.forEach((pid, idx) => {
-    const p = state.players[pid];
-    if (!p) return;
-    const div = document.createElement('div');
-    div.className = `player-seat player-pos-${idx + 1}`;
-    const admin = pid === state.gameAdminId ? ' ★' : '';
-    const streak = playerStreaks[pid] || 0;
-    const cold = streak >= 3 ? ' <span class="cold-streak">🥶 COLD</span>' : '';
-    div.innerHTML = `<div class="player-name">${p.name}${admin}${cold}</div>
-                     <div class="player-chips">$${p.chips.toFixed(2)}</div>`;
-    if (pid === state.currentPlayerId) div.classList.add('current-turn');
-    if (pid === myPlayerId) div.classList.add('my-seat');
-    playersArea.appendChild(div);
-  });
-
-  // === RESTORE ORIGINAL BEHAVIOR ===
-  // Show the bet/pot/pass bar whenever it's my turn (regardless of isGameRunning or ace waiting).
-  // This mirrors the original behavior you described.
-  actionArea.style.display = (state.currentPlayerId === myPlayerId) ? 'flex' : 'none';
-
-  updateLeaderboard(state.players, state.playerStats, myPlayerId);
+    updateLeaderboard(state.players, state.playerStats, myPlayerId);
 });
 
 socket.on('dealCard', (data) => {
-  const elem = data.cardSlot === 1 ? card1Elem : card2Elem;
-  // side cards come in face-up (no flipping)
-  renderCard(elem, data.card, false);
-  elem.classList.remove('slide-in-left', 'slide-in-right', 'slide-in-middle');
-  elem.classList.add(data.cardSlot === 1 ? 'slide-in-left' : 'slide-in-right');
-  elem.style.opacity = '1';
-  elem.classList.add('visible');
-  if (soundsReady) sounds.cardSlide();
+    const elem = data.cardSlot === 1 ? card1Elem : card2Elem;
+    renderCard(elem, data.card, true);
+    elem.classList.add('slide-in');
+    if(soundsReady) sounds.cardSlide();
 });
 
 socket.on('dealMiddleCardPlaceholder', () => {
-  renderCard(nextCardElem, null);
-  nextCardElem.classList.remove('slide-in-left','slide-in-right','slide-in-middle');
-  nextCardElem.classList.add('slide-in-middle');
-  if (soundsReady) sounds.cardSlide();
-  canBet = true;
+    renderCard(nextCardElem, null, false);
+    nextCardElem.classList.add('slide-in');
+    if (soundsReady) sounds.cardSlide();
+    
+    // Enable betting after second card is dealt
+    canBet = true;
 });
 
-socket.on('promptAceChoice', () => aceChoiceScreen.style.display = 'flex');
+socket.on('promptAceChoice', () => { aceChoiceScreen.style.display = 'flex'; });
 
 socket.on('cardResult', (data) => {
-  renderCard(nextCardElem, data.card);
-  if (data.isDramatic) nextCardElem.classList.add('dramatic-flip');
-  setTimeout(() => {
-    nextCardElem.classList.add('is-flipping');
-    if (soundsReady) sounds.cardFlip();
-  }, 100);
-
-  if (data.isPost) {
+    renderCard(nextCardElem, data.card, false);
+    if (data.isDramatic) nextCardElem.classList.add('dramatic-flip');
+    
     setTimeout(() => {
-      const face = nextCardElem.querySelector('.card-front');
-      if (face) face.classList.add('post-hit');
-      body.classList.add('screen-shake');
-      if (soundsReady) sounds.post();
+        nextCardElem.classList.add('is-flipping');
+        if (soundsReady) sounds.cardFlip();
+    }, 100);
 
-      // --- Post video logic ---
-      if (postVideo && !isVideoPlaying) {
-        isVideoPlaying = true;
-        videoBackdrop.style.display = 'block';
-        postVideo.style.display = 'block';
-        postVideo.currentTime = 0;
-        postVideo.volume = 1;
-        const playPromise = postVideo.play();
-        if (playPromise) {
-          playPromise.then(() => {
-            const check = setInterval(() => {
-              if (postVideo.currentTime >= 15) {
-                postVideo.pause();
-                postVideo.style.display = 'none';
-                videoBackdrop.style.display = 'none';
-                clearInterval(check);
-                isVideoPlaying = false;
-              }
-            }, 200);
-          }).catch(() => {
-            postVideo.style.display = 'none';
-            videoBackdrop.style.display = 'none';
-            isVideoPlaying = false;
-          });
-        }
-        postVideo.onended = () => {
-          postVideo.style.display = 'none';
-          videoBackdrop.style.display = 'none';
-          isVideoPlaying = false;
-        };
-      }
-    }, data.isDramatic ? 1200 : 600);
-
-    setTimeout(() => {
-      body.classList.remove('screen-shake');
-      const face = nextCardElem.querySelector('.card-front');
-      if (face) face.classList.remove('post-hit');
-    }, data.isDramatic ? 2200 : 1500);
-  }
+    if (data.isPost) {
+        setTimeout(() => {
+            const cardFace = nextCardElem.querySelector('.card-front');
+            cardFace.classList.add('post-hit');
+            body.classList.add('screen-shake');
+            if(soundsReady) sounds.post();
+            
+            // Play post video
+            if (postVideo && !isVideoPlaying) {
+                isVideoPlaying = true;
+                postVideo.style.display = 'block';
+                postVideo.currentTime = 0;
+                postVideo.volume = 1.0;
+                
+                // Play the video
+                const playPromise = postVideo.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        console.log('Post video playing');
+                        
+                        // Monitor time and stop at 15 seconds
+                        const checkTime = setInterval(() => {
+                            if (postVideo.currentTime >= 15) {
+                                postVideo.pause();
+                                postVideo.style.display = 'none';
+                                isVideoPlaying = false;
+                                clearInterval(checkTime);
+                                console.log('Post video stopped at 15s');
+                            }
+                        }, 100);
+                        
+                    }).catch(error => {
+                        console.error('Video play failed:', error);
+                        postVideo.style.display = 'none';
+                        isVideoPlaying = false;
+                    });
+                }
+                
+                // Handle video ending naturally
+                postVideo.onended = () => {
+                    postVideo.style.display = 'none';
+                    isVideoPlaying = false;
+                    console.log('Post video ended');
+                };
+                
+                // Handle errors
+                postVideo.onerror = () => {
+                    console.error('Video error - check if post.mp4 exists in public folder');
+                    postVideo.style.display = 'none';
+                    isVideoPlaying = false;
+                };
+            }
+        }, data.isDramatic ? 1250 : 600);
+        
+        setTimeout(() => {
+            const cardFace = nextCardElem.querySelector('.card-front');
+            cardFace.classList.remove('post-hit');
+            body.classList.remove('screen-shake');
+        }, data.isDramatic ? 2250 : 1500);
+    }
 });
 
-socket.on('clearResult', () => {
-  renderCard(card1Elem, null);
-  renderCard(card2Elem, null);
-  renderCard(nextCardElem, null);
-  canBet = false;
+socket.on('clearResult', () => { 
+    renderCard(nextCardElem, null, false); 
+    renderCard(card1Elem, null, false); 
+    renderCard(card2Elem, null, false);
+    canBet = false; // Disable betting when clearing for new turn
 });
 
 socket.on('message', (data) => {
-  messageElem.textContent = data.text;
-  if (data.isEmphasis) {
-    messageElem.classList.add('emphasis');
-    setTimeout(() => messageElem.classList.remove('emphasis'), 2800);
-  }
-  if (data.actorId) {
-    if (data.outcome === 'win') {
-      playerStreaks[data.actorId] = 0;
-      if (data.actorId === myPlayerId && soundsReady) sounds.cash();
-    } else if (['loss', 'post'].includes(data.outcome)) {
-      playerStreaks[data.actorId] = (playerStreaks[data.actorId] || 0) + 1;
-      if (data.actorId === myPlayerId && soundsReady) {
-        if (playerStreaks[data.actorId] >= 3) sounds.sadTrombone();
-        else sounds.lose();
-      }
+    messageElem.textContent = data.text;
+    if (data.isEmphasis) {
+        messageElem.classList.add('emphasis');
+        setTimeout(() => messageElem.classList.remove('emphasis'), 2800); 
+    } else {
+        messageElem.classList.remove('emphasis');
     }
-  }
+    
+    // Update streaks based on outcome
+    if (data.actorId) {
+        if (data.outcome === 'win') {
+            playerStreaks[data.actorId] = 0; // Reset streak on win
+            if (data.actorId === myPlayerId && soundsReady) sounds.cash();
+        } else if (data.outcome === 'loss' || data.outcome === 'post') {
+            playerStreaks[data.actorId] = (playerStreaks[data.actorId] || 0) + 1;
+            
+            // Play sad sound if on cold streak
+            if (data.actorId === myPlayerId && soundsReady) {
+                if (playerStreaks[data.actorId] >= 3) {
+                    sounds.sadTrombone();
+                } else {
+                    sounds.lose();
+                }
+            }
+        }
+    }
 });
 
-socket.on('start67Challenge', () => sixSevenBtn.style.display = 'block');
-socket.on('end67Challenge', () => sixSevenBtn.style.display = 'none');
-socket.on('newChatMessage', addChatMessage);
+socket.on('start67Challenge', () => { sixSevenBtn.style.display = 'block'; });
+socket.on('end67Challenge', () => { sixSevenBtn.style.display = 'none'; });
+socket.on('newChatMessage', (data) => { addChatMessage(data); });
