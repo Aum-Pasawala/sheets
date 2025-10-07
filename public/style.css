@@ -409,3 +409,19 @@ body {
     width: 90px;
   }
 }
+/* --- your existing styles remain unchanged --- */
+
+/* keep all your original CSS exactly as it was above this point */
+
+/* === side-card face-up fix (safe minimal patch) === */
+#card1 .card-front,
+#card2 .card-front {
+  backface-visibility: visible;
+  transform: none !important;
+  z-index: 2;
+}
+
+#card1 .card-back,
+#card2 .card-back {
+  display: none !important;
+}
