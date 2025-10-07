@@ -47,6 +47,19 @@ const musicToggle = document.getElementById('musicToggle');
 console.log('🎵 Background Music Element:', bgMusic ? 'FOUND ✅' : 'NOT FOUND ❌');
 if (bgMusic) {
   console.log('🎵 Music Source:', bgMusic.src);
+  console.log('🎵 Current Source:', bgMusic.currentSrc);
+  
+  // Test if file exists
+  bgMusic.addEventListener('error', (e) => {
+    console.error('❌ MUSIC FILE ERROR - File not found or cannot load!');
+    console.error('Make sure casino-music.mp3 exists in public folder');
+  });
+  
+  bgMusic.addEventListener('canplaythrough', () => {
+    console.log('✅ Music file loaded and ready to play');
+  });
+} else {
+  console.error('❌ bgMusic element is NULL - check HTML');
 }
 
 let myPlayerId = null;
@@ -363,11 +376,14 @@ socket.on('gameState', (state) => {
 
 socket.on('dealCard', (data) => {
   const elem = data.cardSlot === 1 ? card1Elem : card2Elem;
-  renderCard(elem, data.card, false);
+  renderCard(elem, data.card, true); // TRUE = face up immediately
   elem.classList.remove('slide-in-left', 'slide-in-right', 'slide-in-middle');
   elem.classList.add(data.cardSlot === 1 ? 'slide-in-left' : 'slide-in-right');
-  elem.classList.add('is-flipping');
   elem.style.opacity = '1';
+  // Add small delay then flip to face-up
+  setTimeout(() => {
+    elem.classList.add('is-flipping');
+  }, 100);
   if (soundsReady) sounds.cardSlide();
 });
 

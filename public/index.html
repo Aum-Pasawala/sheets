@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Sheets Game</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
 </head>
 <body>
@@ -91,7 +91,7 @@
             <h2>Buy-in to the Game</h2>
             <p>Enter your name and buy-in amount to join the action!</p>
             <input type="text" id="nameInput" placeholder="Enter your name" maxlength="15">
-            <input type="number" id="buyInInput" value="100" step="0.01" placeholder="Enter amount">
+            <input type="number" id="buyInInput" value="100" step="0.01" placeholder="Enter amount" min="0.01">
             <button id="joinGameBtn">Join Game</button>
         </div>
     </div>
@@ -172,12 +172,6 @@
         <button id="sixSevenBtn" class="six-seven-btn" style="display: none;">6-7!</button>
     </div>
 
-    <!-- Post Video Player -->
-    <video id="postVideo" class="post-video" style="display: none;" preload="auto">
-        <source src="post.mp4" type="video/mp4">
-        Your browser does not support the video tag.
-    </video>
-
     <div id="chat-container" class="chat-container" style="display: none;">
         <div id="chat-window" class="chat-window"></div>
         <div class="chat-input-area">
@@ -185,6 +179,15 @@
             <button id="chat-send-btn">Send</button>
         </div>
     </div>
+
+    <!-- Video backdrop + post video -->
+    <div id="videoBackdrop" style="display:none;"></div>
+    <video id="postVideo" src="post.mp4" style="display:none;" preload="auto" playsinline></video>
+
+    <!-- Background Music - MUST BE HERE -->
+    <audio id="bgMusic" loop preload="auto">
+        <source src="casino-music.mp3" type="audio/mpeg">
+    </audio>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="client.js"></script>
