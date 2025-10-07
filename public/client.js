@@ -383,9 +383,10 @@ socket.on('gameState', (state) => {
 socket.on('dealCard', (data) => {
   const elem = data.cardSlot === 1 ? card1Elem : card2Elem;
   
-  // Clear any existing classes
+  // Clear any existing classes and reset transform
   elem.className = 'card';
   elem.style.opacity = '0';
+  elem.style.transform = '';
   
   // Render the card with face-up flag
   renderCard(elem, data.card, true);
@@ -394,13 +395,15 @@ socket.on('dealCard', (data) => {
   elem.classList.add(data.cardSlot === 1 ? 'slide-in-left' : 'slide-in-right');
   elem.classList.add('visible');
   
-  // Make visible and immediately show face
+  // FORCE the card to show face-up with direct transform
+  elem.style.transform = 'rotateY(180deg)';
   elem.style.opacity = '1';
-  elem.classList.add('is-flipping');
   
   if (soundsReady) sounds.cardSlide();
   
-  console.log(`Card ${data.cardSlot} dealt:`, data.card, 'Classes:', elem.className);
+  console.log(`Card ${data.cardSlot} dealt:`, data.card);
+  console.log('Transform applied:', elem.style.transform);
+  console.log('Classes:', elem.className);
 });
 
 socket.on('dealMiddleCardPlaceholder', () => {
