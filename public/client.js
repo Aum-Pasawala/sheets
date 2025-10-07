@@ -21,7 +21,6 @@ const potAmountElem = document.getElementById('potAmount');
 const messageElem = document.getElementById('message');
 const betInput = document.getElementById('betInput');
 const betButton = document.getElementById('betButton');
-const betPotButton = document.getElementById('betPotButton'); // ✅ NEW POT BUTTON
 const passButton = document.getElementById('passButton');
 const creditButton = document.getElementById('creditButton');
 const playersArea = document.getElementById('players-area');
@@ -35,8 +34,14 @@ const chatInput = document.getElementById('chat-input');
 const chatSendBtn = document.getElementById('chat-send-btn');
 const body = document.querySelector('body');
 
+// 🆕 ADDED: Pot button
+const potButton = document.createElement('button');
+potButton.id = 'potButton';
+potButton.textContent = 'Pot';
+potButton.style.display = 'none';
+actionArea.appendChild(potButton);
+
 let myPlayerId = null;
-let currentGameState = {};
 
 // --- Sound Effects ---
 let soundsReady = false;
@@ -67,6 +72,7 @@ document.body.addEventListener('click', async () => {
 function renderCard(element, card, isFaceUp = false) {
     const front = element.querySelector('.card-front');
     element.className = 'card';
+
     if (!card) {
         front.innerHTML = '';
         if (element.id === 'nextCard') {
@@ -80,7 +86,9 @@ function renderCard(element, card, isFaceUp = false) {
     const color = (card.suit === '♥' || card.suit === '♦') ? 'red' : 'black';
     element.classList.add(color, 'visible');
     front.innerHTML = `<span class="top">${card.rank}${card.suit}</span><span>${card.suit}</span><span class="bottom">${card.rank}${card.suit}</span>`;
-    if (isFaceUp) element.classList.add('is-flipping');
+    if (isFaceUp) {
+        element.classList.add('is-flipping');
+    }
 }
 
 function addChatMessage(data) {
@@ -98,13 +106,13 @@ function addChatMessage(data) {
 function updateLeaderboard(players, playerStats, myId) {
     leaderboardBody.innerHTML = '';
     const sortedPlayers = Object.values(players).sort((a, b) => b.chips - a.chips);
-
     for (const player of sortedPlayers) {
         const pId = player.id;
         const stats = playerStats[pId] || { wins: 0, losses: 0, posts: 0 };
         const netCash = player.chips - player.totalBuyIn;
         const netClass = netCash > 0 ? 'net-positive' : (netCash < 0 ? 'net-negative' : '');
         const netDisplay = (netCash >= 0 ? '+' : '-') + '$' + Math.abs(netCash).toFixed(2);
+
         const row = document.createElement('tr');
         if (pId === myId) row.classList.add('my-row');
         row.innerHTML = `
@@ -132,10 +140,7 @@ joinGameBtn.addEventListener('click', () => {
     }
 });
 
-creditButton.addEventListener('click', () => {
-    creditScreen.style.display = 'flex';
-    sounds.click();
-});
+creditButton.addEventListener('click', () => { creditScreen.style.display = 'flex'; sounds.click(); });
 addCreditBtn.addEventListener('click', () => {
     const amount = parseFloat(creditInput.value);
     if (amount && amount > 0) {
@@ -145,33 +150,18 @@ addCreditBtn.addEventListener('click', () => {
         sounds.click();
     }
 });
-cancelCreditBtn.addEventListener('click', () => {
-    creditInput.value = '';
-    creditScreen.style.display = 'none';
-    sounds.click();
-});
-
-startGameBtn.addEventListener('click', () => {
-    socket.emit('startGame');
-    sounds.click();
-});
-
+cancelCreditBtn.addEventListener('click', () => { creditInput.value = ''; creditScreen.style.display = 'none'; sounds.click(); });
+startGameBtn.addEventListener('click', () => { socket.emit('startGame'); sounds.click(); });
 aceLowBtn.addEventListener('click', () => { socket.emit('aceChoice', 'low'); aceChoiceScreen.style.display = 'none'; sounds.click(); });
 aceHighBtn.addEventListener('click', () => { socket.emit('aceChoice', 'high'); aceChoiceScreen.style.display = 'none'; sounds.click(); });
+betButton.addEventListener('click', () => { socket.emit('playerBet', parseFloat(betInput.value)); betInput.value = ''; sounds.click(); });
 
-betButton.addEventListener('click', () => {
-    socket.emit('playerBet', parseFloat(betInput.value));
-    betInput.value = '';
-    sounds.click();
-});
-
-// ✅ NEW: Pot button — bets entire pot
-betPotButton.addEventListener('click', () => {
-    if (currentGameState && currentGameState.pot) {
-        socket.emit('playerBet', currentGameState.pot);
+// 🆕 Pot button logic
+potButton.addEventListener('click', () => {
+    const potValue = parseFloat(potAmountElem.textContent.replace('$', ''));
+    if (!isNaN(potValue) && potValue > 0) {
+        socket.emit('playerBet', potValue);
         sounds.click();
-    } else {
-        alert("Pot value not available yet!");
     }
 });
 
@@ -186,24 +176,21 @@ chatSendBtn.addEventListener('click', () => {
 });
 chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') chatSendBtn.click(); });
 
-// --- Socket.IO Listeners ---
+// --- Socket.IO Event Listeners ---
 socket.on('connect', () => { myPlayerId = socket.id; });
 
 socket.on('gameState', (state) => {
-    currentGameState = state;
     potAmountElem.textContent = `$${state.pot.toFixed(2)}`;
     potRebuildInput.disabled = (state.gameAdminId !== myPlayerId);
     potRebuildInput.title = potRebuildInput.disabled ? "Only the admin can set this value." : "You are the admin.";
     potRebuildInput.value = state.potRebuildAmount.toFixed(2);
     
-    // Admin start visibility
     if (state.gameAdminId === myPlayerId && !state.isGameRunning && state.playerOrder.length >= 3) {
         startGameBtn.style.display = 'block';
     } else {
         startGameBtn.style.display = 'none';
     }
 
-    // Render players
     playersArea.innerHTML = '';
     state.playerOrder.forEach((playerId, index) => {
         const player = state.players[playerId];
@@ -217,14 +204,14 @@ socket.on('gameState', (state) => {
         playersArea.appendChild(playerDiv);
     });
 
-    // Enable actions only when it's my turn
-    const myTurn = state.isGameRunning && state.currentPlayerId === myPlayerId && !state.isWaitingForAceChoice;
-    actionArea.style.display = myTurn ? 'flex' : 'none';
-    betInput.disabled = !myTurn;
-    betButton.disabled = !myTurn;
-    betPotButton.disabled = !myTurn;
-    passButton.disabled = !myTurn;
-    creditButton.disabled = !myTurn;
+    // 🆕 Show pot button only when it’s your turn
+    if (state.isGameRunning && state.currentPlayerId === myPlayerId && !state.isWaitingForAceChoice) {
+        actionArea.style.display = 'flex';
+        potButton.style.display = 'inline-block';
+    } else {
+        actionArea.style.display = 'none';
+        potButton.style.display = 'none';
+    }
 
     updateLeaderboard(state.players, state.playerStats, myPlayerId);
 });
@@ -233,7 +220,7 @@ socket.on('dealCard', (data) => {
     const elem = data.cardSlot === 1 ? card1Elem : card2Elem;
     renderCard(elem, data.card, true);
     elem.classList.add('slide-in');
-    if (soundsReady) sounds.cardSlide();
+    if(soundsReady) sounds.cardSlide();
 });
 
 socket.on('dealMiddleCardPlaceholder', () => {
@@ -258,7 +245,7 @@ socket.on('cardResult', (data) => {
             const cardFace = nextCardElem.querySelector('.card-front');
             cardFace.classList.add('post-hit');
             body.classList.add('screen-shake');
-            if (soundsReady) sounds.post();
+            if(soundsReady) sounds.post();
         }, data.isDramatic ? 1250 : 600);
         setTimeout(() => {
             const cardFace = nextCardElem.querySelector('.card-front');
