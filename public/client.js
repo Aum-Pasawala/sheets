@@ -37,10 +37,12 @@ const chatWindow = document.getElementById('chat-window');
 const chatInput = document.getElementById('chat-input');
 const chatSendBtn = document.getElementById('chat-send-btn');
 const body = document.querySelector('body');
+const postVideo = document.getElementById('postVideo');
 
 let myPlayerId = null;
 let currentPotValue = 0;
 let playerStreaks = {}; // Track consecutive losses/posts
+let isVideoPlaying = false; // Track if post video is playing
 
 // --- Sound Effects ---
 let soundsReady = false;
