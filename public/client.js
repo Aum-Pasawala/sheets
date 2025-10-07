@@ -187,6 +187,25 @@ chatSendBtn.addEventListener('click', () => {
 chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') chatSendBtn.click(); });
 
 // --- Socket.IO Event Listeners ---
+// Helper to render player area with bets
+function renderPlayersWithBets(state) {
+    playersArea.innerHTML = '';
+    state.playerOrder.forEach((playerId, index) => {
+        const player = state.players[playerId];
+        if (!player) return;
+        const playerDiv = document.createElement('div');
+        playerDiv.className = `player-seat player-pos-${index + 1}`;
+        const adminMarker = (playerId === state.gameAdminId) ? ' &#9733;' : '';
+        let betHtml = '';
+        if (currentBets[playerId]) {
+            betHtml = `<div class=\"player-bet\">${currentBets[playerId]}</div>`;
+        }
+        playerDiv.innerHTML = `<div class=\"player-name\">${player.name}${adminMarker}</div><div class=\"player-chips\">$${player.chips.toFixed(2)}</div>${betHtml}`;
+        if (playerId === myPlayerId) playerDiv.classList.add('my-seat');
+        if (playerId === state.currentPlayerId) playerDiv.classList.add('current-turn');
+        playersArea.appendChild(playerDiv);
+    });
+}
 socket.on('connect', () => { myPlayerId = socket.id; });
 
 socket.on('gameState', (state) => {
@@ -202,30 +221,12 @@ socket.on('gameState', (state) => {
         startGameBtn.style.display = 'none';
     }
 
-    playersArea.innerHTML = '';
-    state.playerOrder.forEach((playerId, index) => {
-        const player = state.players[playerId];
-        if (!player) return;
-        const playerDiv = document.createElement('div');
-        playerDiv.className = `player-seat player-pos-${index + 1}`;
-        const adminMarker = (playerId === state.gameAdminId) ? ' &#9733;' : '';
-        let betHtml = '';
-        if (currentBets[playerId]) {
-            betHtml = `<div class="player-bet">${currentBets[playerId]}</div>`;
-        }
-        playerDiv.innerHTML = `<div class="player-name">${player.name}${adminMarker}</div><div class="player-chips">$${player.chips.toFixed(2)}</div>${betHtml}`;
-        if (playerId === state.currentPlayerId) playerDiv.classList.add('current-turn');
-        if (playerId === myPlayerId) playerDiv.classList.add('my-seat');
-        playersArea.appendChild(playerDiv);
-    });
+    renderPlayersWithBets(state);
 // Listen for bet updates from server
 socket.on('updateBets', (bets) => {
     currentBets = bets || {};
-    // Force re-render of player area to show bets
-    // (simulate gameState update but only update bets visually)
-    const state = window.lastGameState;
-    if (state) {
-        socket.emit('requestGameState'); // or trigger a re-render if you have a better way
+    if (window.lastGameState) {
+        renderPlayersWithBets(window.lastGameState);
     }
 });
 
