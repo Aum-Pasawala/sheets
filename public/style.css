@@ -259,15 +259,6 @@ body.screen-shake {
 .credit-btn:hover {
   background-color: #2ecc71;
 }
-
-/* ✅ Added style for new Pot button */
-.pot-btn {
-  background-color: #1abc9c;
-}
-.pot-btn:hover {
-  background-color: #16a085;
-}
-
 input[type="number"] {
   width: 110px;
   padding: 12px;
@@ -325,7 +316,7 @@ button:hover {
   margin: 10px;
 }
 
-/* Leaderboard - Larger */
+/* Leaderboard */
 .leaderboard {
   position: fixed;
   top: 20px;
@@ -359,12 +350,12 @@ button:hover {
   background-color: rgba(41, 128, 185, 0.4);
 }
 .leaderboard .net-positive {
-    color: #2ecc71;
-    font-weight: bold;
+  color: #2ecc71;
+  font-weight: bold;
 }
 .leaderboard .net-negative {
-    color: #e74c3c;
-    font-weight: bold;
+  color: #e74c3c;
+  font-weight: bold;
 }
 
 .settings-area {
@@ -504,89 +495,72 @@ button:hover {
 }
 
 @keyframes insane-shake {
-  0%,
-  100% {
-    transform: translate(0) rotate(0);
-  }
-  10% {
-    transform: translate(-20px, -5px) rotate(-10deg);
-  }
-  20% {
-    transform: translate(20px, 5px) rotate(10deg);
-  }
-  30% {
-    transform: translate(-30px, -10px) rotate(-15deg);
-  }
-  40% {
-    transform: translate(30px, 10px) rotate(15deg);
-  }
-  50% {
-    transform: translate(-20px, -5px) rotate(-10deg);
-  }
-  60% {
-    transform: translate(20px, 5px) rotate(10deg);
-  }
-  70% {
-    transform: translate(-10px, -2px) rotate(-5deg);
-  }
-  80% {
-    transform: translate(10px, 2px) rotate(5deg);
-  }
-  90% {
-    transform: translate(-5px, 0px) rotate(-2deg);
-  }
+  0%, 100% { transform: translate(0) rotate(0); }
+  10% { transform: translate(-20px, -5px) rotate(-10deg); }
+  20% { transform: translate(20px, 5px) rotate(10deg); }
+  30% { transform: translate(-30px, -10px) rotate(-15deg); }
+  40% { transform: translate(30px, 10px) rotate(15deg); }
+  50% { transform: translate(-20px, -5px) rotate(-10deg); }
+  60% { transform: translate(20px, 5px) rotate(10deg); }
+  70% { transform: translate(-10px, -2px) rotate(-5deg); }
+  80% { transform: translate(10px, 2px) rotate(5deg); }
+  90% { transform: translate(-5px, 0px) rotate(-2deg); }
 }
 @keyframes post-flash {
-  0%,
-  100% {
-    box-shadow: 0 0 10px white;
-  }
-  50% {
-    box-shadow: 0 0 70px orange, 0 0 70px red;
-  }
+  0%, 100% { box-shadow: 0 0 10px white; }
+  50% { box-shadow: 0 0 70px orange, 0 0 70px red; }
 }
 @keyframes screen-shake {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  25% {
-    transform: translateX(-8px);
-  }
-  50% {
-    transform: translateX(8px);
-  }
-  75% {
-    transform: translateX(-8px);
-  }
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  50% { transform: translateX(8px); }
+  75% { transform: translateX(-8px); }
 }
 @keyframes pulse {
-  0% {
-    transform: translate(-50%, -50%) scale(1);
-  }
-  50% {
-    transform: translate(-50%, -50%) scale(1.1);
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(1);
-  }
+  0% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.1); }
+  100% { transform: translate(-50%, -50%) scale(1); }
 }
 @keyframes flash-red {
-  0%,
-  100% {
-    background-color: #e74c3c;
-  }
-  50% {
-    background-color: #ff0000;
-  }
+  0%, 100% { background-color: #e74c3c; }
+  50% { background-color: #ff0000; }
 }
 @keyframes text-pulse {
-  0%,
-  100% {
-    transform: translateX(-50%) scale(1.1);
-  }
+  0%, 100% { transform: translateX(-50%) scale(1.1); }
   50% {
     transform: translateX(-50%) scale(1.15);
     text-shadow: 0 0 20px rgba(255, 204, 0, 1);
   }
+}
+
+/* === Action Button Colors === */
+#betButton {
+  background-color: #27ae60; /* green */
+}
+#betButton:hover {
+  background-color: #2ecc71;
+}
+
+#potButton {
+  background-color: #2980b9; /* blue with glow */
+  box-shadow: 0 0 15px rgba(41, 128, 185, 0.7);
+  transition: box-shadow 0.3s, background-color 0.3s;
+}
+#potButton:hover {
+  background-color: #3498db;
+  box-shadow: 0 0 25px rgba(52, 152, 219, 0.9);
+}
+
+#passButton {
+  background-color: #c0392b; /* red */
+}
+#passButton:hover {
+  background-color: #e74c3c;
+}
+
+#creditButton {
+  background-color: #e67e22; /* orange */
+}
+#creditButton:hover {
+  background-color: #f39c12;
 }
