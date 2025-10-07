@@ -186,14 +186,12 @@ async function dealSecondCard() {
             io.emit('end67Challenge');
             let loserId = null;
             
-            // Find the last person who pressed (or didn't press)
             if (sixSevenPresses.length < playerOrder.length) {
                 const playersWhoDidNotPress = playerOrder.filter(pId => players[pId] && !sixSevenPresses.includes(pId));
                 if (playersWhoDidNotPress.length > 0) {
                     loserId = playersWhoDidNotPress[playersWhoDidNotPress.length - 1];
                 }
             } else if (sixSevenPresses.length > 0) {
-                // Everyone pressed, last one to press loses
                 loserId = sixSevenPresses[sixSevenPresses.length - 1];
             }
 
@@ -329,6 +327,7 @@ io.on('connection', (socket) => {
         }
     });
 
+    // ✅ Fixed Admin Reassignment Logic
     socket.on('disconnect', () => {
         if (waitingPlayers[socket.id]) {
             broadcastSystemMessage(`${waitingPlayers[socket.id].playerData.name} left the waiting queue.`);
@@ -336,33 +335,48 @@ io.on('connection', (socket) => {
             return;
         }
 
-        if (players[socket.id]) {
-            const wasAdmin = (socket.id === gameAdminId);
-            const disconnectedPlayerIndex = playerOrder.indexOf(socket.id);
-            broadcastSystemMessage(`${players[socket.id].name} has left the game.`);
-            delete players[socket.id];
-            delete playerStats[socket.id];
-            playerOrder = playerOrder.filter(id => id !== socket.id);
-            
-            if (wasAdmin && playerOrder.length > 0) {
-                gameAdminId = playerOrder[0];
-                broadcastSystemMessage(`${players[gameAdminId].name} is the new game admin.`);
-            }
-            if (playerOrder.length < MIN_PLAYERS && isGameRunning) {
-                isGameRunning = false;
-                broadcastMessage('Not enough players. Game paused.');
-            }
-            if (playerOrder.length > 0 && isGameRunning) {
-                if (disconnectedPlayerIndex < currentPlayerIndex) {
-                    currentPlayerIndex--;
-                } else if (disconnectedPlayerIndex === currentPlayerIndex && currentPlayerIndex === playerOrder.length) {
-                    currentPlayerIndex = -1;
-                }
-            } else {
-                pot = 0; currentCards = []; currentPlayerIndex = -1; isGameRunning = false; gameAdminId = null;
-            }
-            broadcastGameState();
+        const wasAdmin = (socket.id === gameAdminId);
+        const disconnectedPlayer = players[socket.id];
+        const disconnectedPlayerIndex = playerOrder.indexOf(socket.id);
+
+        if (disconnectedPlayer) {
+            broadcastSystemMessage(`${disconnectedPlayer.name} has left the game.`);
         }
+
+        // Safely remove player
+        delete players[socket.id];
+        delete playerStats[socket.id];
+        playerOrder = playerOrder.filter(id => id !== socket.id);
+
+        // ✅ Reassign admin to next player
+        if (wasAdmin && playerOrder.length > 0) {
+            gameAdminId = playerOrder[0];
+            const newAdmin = players[gameAdminId];
+            if (newAdmin) {
+                broadcastSystemMessage(`${newAdmin.name} is now the new game admin.`);
+            }
+        }
+
+        if (playerOrder.length < MIN_PLAYERS && isGameRunning) {
+            isGameRunning = false;
+            broadcastMessage('Not enough players. Game paused.');
+        }
+
+        if (playerOrder.length > 0 && isGameRunning) {
+            if (disconnectedPlayerIndex < currentPlayerIndex) {
+                currentPlayerIndex--;
+            } else if (disconnectedPlayerIndex === currentPlayerIndex && currentPlayerIndex === playerOrder.length) {
+                currentPlayerIndex = -1;
+            }
+        } else if (playerOrder.length === 0) {
+            pot = 0;
+            currentCards = [];
+            currentPlayerIndex = -1;
+            isGameRunning = false;
+            gameAdminId = null;
+        }
+
+        broadcastGameState();
     });
 });
 

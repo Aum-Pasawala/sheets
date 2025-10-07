@@ -533,34 +533,49 @@ button:hover {
   }
 }
 
-/* === Action Button Colors === */
+/* === Special Button Styling === */
+
+/* Default Bet button - green */
 #betButton {
-  background-color: #27ae60; /* green */
+  background-color: #27ae60;
 }
 #betButton:hover {
   background-color: #2ecc71;
 }
 
-#potButton {
-  background-color: #2980b9; /* blue with glow */
-  box-shadow: 0 0 15px rgba(41, 128, 185, 0.7);
-  transition: box-shadow 0.3s, background-color 0.3s;
-}
-#potButton:hover {
-  background-color: #3498db;
-  box-shadow: 0 0 25px rgba(52, 152, 219, 0.9);
-}
-
+/* Pass button - red */
 #passButton {
-  background-color: #c0392b; /* red */
+  background-color: #c0392b;
 }
 #passButton:hover {
   background-color: #e74c3c;
 }
 
-#creditButton {
-  background-color: #e67e22; /* orange */
+/* Pot button - glowing blue */
+#potButton {
+  background-color: #2980b9;
+  box-shadow: 0 0 20px rgba(52, 152, 219, 0.9), 0 0 40px rgba(41, 128, 185, 0.6);
+  animation: glowPulse 1.8s infinite ease-in-out;
+  font-weight: bold;
+  border: 2px solid #5dade2;
+  color: #fff;
+  transition: all 0.3s ease;
 }
-#creditButton:hover {
-  background-color: #f39c12;
+#potButton:hover {
+  background-color: #3498db;
+  box-shadow: 0 0 25px rgba(52, 152, 219, 1), 0 0 50px rgba(41, 128, 185, 0.8);
+  transform: scale(1.07);
+}
+
+/* Glow animation */
+@keyframes glowPulse {
+  0% {
+    box-shadow: 0 0 15px rgba(52, 152, 219, 0.6), 0 0 25px rgba(41, 128, 185, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 35px rgba(52, 152, 219, 0.9), 0 0 60px rgba(41, 128, 185, 0.8);
+  }
+  100% {
+    box-shadow: 0 0 15px rgba(52, 152, 219, 0.6), 0 0 25px rgba(41, 128, 185, 0.4);
+  }
 }
