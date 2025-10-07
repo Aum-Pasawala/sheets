@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Sheets Game</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
 </head>
 <body>
@@ -91,7 +91,7 @@
             <h2>Buy-in to the Game</h2>
             <p>Enter your name and buy-in amount to join the action!</p>
             <input type="text" id="nameInput" placeholder="Enter your name" maxlength="15">
-            <input type="number" id="buyInInput" value="100" step="0.01" placeholder="Enter amount">
+            <input type="number" id="buyInInput" value="100" step="0.01" placeholder="Enter amount" min="0.01">
             <button id="joinGameBtn">Join Game</button>
         </div>
     </div>
@@ -165,6 +165,10 @@
             <button id="chat-send-btn">Send</button>
         </div>
     </div>
+
+    <!-- Video backdrop + post video (place post.mp4 in the public folder) -->
+    <div id="videoBackdrop" style="display:none;"></div>
+    <video id="postVideo" src="post.mp4" style="display:none;" preload="auto" playsinline></video>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="client.js"></script>

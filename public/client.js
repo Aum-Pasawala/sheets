@@ -38,6 +38,7 @@ const chatInput = document.getElementById('chat-input');
 const chatSendBtn = document.getElementById('chat-send-btn');
 const body = document.querySelector('body');
 const postVideo = document.getElementById('postVideo');
+const videoBackdrop = document.getElementById('videoBackdrop');
 
 let myPlayerId = null;
 let currentPotValue = 0;
@@ -94,14 +95,15 @@ document.body.addEventListener('click', initAudio, { once: true });
 // --- Render Functions ---
 function renderCard(element, card, isFaceUp = false) {
     const front = element.querySelector('.card-front');
-    element.className = 'card';
+    element.className = 'card'; // reset classes to just 'card'
     
     if (!card) {
         front.innerHTML = '';
+        const back = element.querySelector('.card-back');
+        back.innerHTML = '';
         if (element.id === 'nextCard') {
-            const back = element.querySelector('.card-back');
             back.innerHTML = '?';
-            element.classList.add('visible', 'card-middle');
+            element.classList.add('card-middle');
         }
         return;
     }
@@ -225,30 +227,50 @@ potButton.addEventListener('click', () => {
     }
 });
 
-// ✅ KEYBOARD SHORTCUTS
+// ✅ Improved KEYBOARD SHORTCUTS
 document.addEventListener('keydown', (e) => {
-    // Don't trigger if typing in input fields or modals visible
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-        return;
-    }
+    // Figure out the active/focused element
+    const active = e.target || document.activeElement;
+
+    // If user is typing in chat or a text input/textarea, don't trigger shortcuts
+    const isTypingText = active && (active.tagName === 'TEXTAREA' || (active.tagName === 'INPUT' && (active.type === 'text' || active.id === 'chat-input')));
+    if (isTypingText) return;
+
+    // If any modal is open, ignore shortcuts
     if (creditScreen.style.display === 'flex' || aceChoiceScreen.style.display === 'flex' || buyInScreen.style.display === 'flex') {
         return;
     }
-    
-    // Only work when action area is visible (your turn) AND can bet
+
+    // Only work when action area is visible (your turn) AND canBet
     if (actionArea.style.display !== 'flex' || !canBet) return;
 
-    if (e.key === ' ' || e.key === 'Spacebar') {
+    const key = e.key || '';
+    const code = e.code || '';
+
+    // Space: pass
+    if (code === 'Space' || key === ' ' || key === 'Spacebar') {
         e.preventDefault();
         passButton.click();
-    } else if (e.key === 'b' || e.key === 'B') {
+        return;
+    }
+
+    // B: bet (only if a bet amount exists)
+    if ((key.toLowerCase && key.toLowerCase() === 'b')) {
         e.preventDefault();
-        if (betInput.value) {
-            betButton.click();
+        // If bet input is empty, focus it so user can type quickly
+        if (!betInput.value) {
+            betInput.focus();
+            return;
         }
-    } else if (e.key === 'p' || e.key === 'P') {
+        betButton.click();
+        return;
+    }
+
+    // P: pot
+    if ((key.toLowerCase && key.toLowerCase() === 'p')) {
         e.preventDefault();
         potButton.click();
+        return;
     }
 });
 
@@ -270,6 +292,8 @@ socket.on('connect', () => {
     // Check if video exists
     if (postVideo) {
         console.log('Post video element found');
+        postVideo.playsInline = true;
+        postVideo.preload = 'auto';
     } else {
         console.error('Post video element NOT found!');
     }
@@ -316,14 +340,18 @@ socket.on('gameState', (state) => {
 
 socket.on('dealCard', (data) => {
     const elem = data.cardSlot === 1 ? card1Elem : card2Elem;
+    // set card and animation class
     renderCard(elem, data.card, true);
-    elem.classList.add('slide-in');
+    // reset possible slide classes, then add the correct one
+    elem.classList.remove('slide-in-left','slide-in-right','slide-in-middle');
+    elem.classList.add(data.cardSlot === 1 ? 'slide-in-left' : 'slide-in-right');
     if(soundsReady) sounds.cardSlide();
 });
 
 socket.on('dealMiddleCardPlaceholder', () => {
     renderCard(nextCardElem, null, false);
-    nextCardElem.classList.add('slide-in');
+    nextCardElem.classList.remove('slide-in-left','slide-in-right','slide-in-middle');
+    nextCardElem.classList.add('slide-in-middle');
     if (soundsReady) sounds.cardSlide();
     
     // Enable betting after second card is dealt
@@ -344,45 +372,56 @@ socket.on('cardResult', (data) => {
     if (data.isPost) {
         setTimeout(() => {
             const cardFace = nextCardElem.querySelector('.card-front');
-            cardFace.classList.add('post-hit');
+            if (cardFace) cardFace.classList.add('post-hit');
             body.classList.add('screen-shake');
             if(soundsReady) sounds.post();
             
             // Play post video
             if (postVideo && !isVideoPlaying) {
                 isVideoPlaying = true;
+                videoBackdrop.style.display = 'block';
                 postVideo.style.display = 'block';
                 postVideo.currentTime = 0;
                 postVideo.volume = 1.0;
                 
-                // Play the video
                 const playPromise = postVideo.play();
                 
                 if (playPromise !== undefined) {
                     playPromise.then(() => {
                         console.log('Post video playing');
                         
-                        // Monitor time and stop at 15 seconds
+                        // Stop at 15 seconds
                         const checkTime = setInterval(() => {
                             if (postVideo.currentTime >= 15) {
                                 postVideo.pause();
                                 postVideo.style.display = 'none';
+                                videoBackdrop.style.display = 'none';
                                 isVideoPlaying = false;
                                 clearInterval(checkTime);
                                 console.log('Post video stopped at 15s');
                             }
-                        }, 100);
+                        }, 150);
                         
                     }).catch(error => {
                         console.error('Video play failed:', error);
                         postVideo.style.display = 'none';
+                        videoBackdrop.style.display = 'none';
                         isVideoPlaying = false;
                     });
+                } else {
+                    // fallback: set a timer in case play returns undefined
+                    setTimeout(() => {
+                        postVideo.pause();
+                        postVideo.style.display = 'none';
+                        videoBackdrop.style.display = 'none';
+                        isVideoPlaying = false;
+                    }, 15000);
                 }
                 
                 // Handle video ending naturally
                 postVideo.onended = () => {
                     postVideo.style.display = 'none';
+                    videoBackdrop.style.display = 'none';
                     isVideoPlaying = false;
                     console.log('Post video ended');
                 };
@@ -391,6 +430,7 @@ socket.on('cardResult', (data) => {
                 postVideo.onerror = () => {
                     console.error('Video error - check if post.mp4 exists in public folder');
                     postVideo.style.display = 'none';
+                    videoBackdrop.style.display = 'none';
                     isVideoPlaying = false;
                 };
             }
@@ -398,7 +438,7 @@ socket.on('cardResult', (data) => {
         
         setTimeout(() => {
             const cardFace = nextCardElem.querySelector('.card-front');
-            cardFace.classList.remove('post-hit');
+            if (cardFace) cardFace.classList.remove('post-hit');
             body.classList.remove('screen-shake');
         }, data.isDramatic ? 2250 : 1500);
     }
@@ -408,6 +448,9 @@ socket.on('clearResult', () => {
     renderCard(nextCardElem, null, false); 
     renderCard(card1Elem, null, false); 
     renderCard(card2Elem, null, false);
+    nextCardElem.classList.remove('is-flipping','dramatic-flip','post-hit','visible');
+    card1Elem.classList.remove('is-flipping','dramatic-flip','post-hit','visible');
+    card2Elem.classList.remove('is-flipping','dramatic-flip','post-hit','visible');
     canBet = false; // Disable betting when clearing for new turn
 });
 
