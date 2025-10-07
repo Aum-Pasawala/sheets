@@ -124,7 +124,6 @@ body.screen-shake {
 .center-pot {
   text-align: center;
   margin-top: 70px;
-  position: relative; /* keeps pot below input buttons */
   z-index: 10;
 }
 .pot-label {
@@ -253,7 +252,6 @@ body.screen-shake {
   background-color: rgba(0, 70, 0, 0.7);
   padding: 12px;
   border-radius: 10px;
-  z-index: 999; /* fixes input not clickable */
 }
 .credit-btn {
   background-color: #27ae60;
@@ -261,6 +259,15 @@ body.screen-shake {
 .credit-btn:hover {
   background-color: #2ecc71;
 }
+
+/* ✅ Added style for new Pot button */
+.pot-btn {
+  background-color: #1abc9c;
+}
+.pot-btn:hover {
+  background-color: #16a085;
+}
+
 input[type="number"] {
   width: 110px;
   padding: 12px;
@@ -281,23 +288,12 @@ button {
 button:hover {
   background-color: #34495e;
 }
+
 .cancel-btn {
   background-color: #7f8c8d;
 }
 .cancel-btn:hover {
   background-color: #95a5a6;
-}
-
-/* Pot button styling */
-.pot-btn {
-  background-color: #16a085;
-  color: white;
-  font-weight: bold;
-  transition: background-color 0.2s, box-shadow 0.2s;
-}
-.pot-btn:hover {
-  background-color: #1abc9c;
-  box-shadow: 0 0 10px #1abc9c;
 }
 
 /* Modals */
@@ -363,12 +359,12 @@ button:hover {
   background-color: rgba(41, 128, 185, 0.4);
 }
 .leaderboard .net-positive {
-  color: #2ecc71;
-  font-weight: bold;
+    color: #2ecc71;
+    font-weight: bold;
 }
 .leaderboard .net-negative {
-  color: #e74c3c;
-  font-weight: bold;
+    color: #e74c3c;
+    font-weight: bold;
 }
 
 .settings-area {
@@ -508,7 +504,8 @@ button:hover {
 }
 
 @keyframes insane-shake {
-  0%, 100% {
+  0%,
+  100% {
     transform: translate(0) rotate(0);
   }
   10% {
@@ -540,7 +537,8 @@ button:hover {
   }
 }
 @keyframes post-flash {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 10px white;
   }
   50% {
@@ -548,7 +546,8 @@ button:hover {
   }
 }
 @keyframes screen-shake {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateX(0);
   }
   25% {
@@ -573,7 +572,8 @@ button:hover {
   }
 }
 @keyframes flash-red {
-  0%, 100% {
+  0%,
+  100% {
     background-color: #e74c3c;
   }
   50% {
@@ -581,7 +581,8 @@ button:hover {
   }
 }
 @keyframes text-pulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateX(-50%) scale(1.1);
   }
   50% {

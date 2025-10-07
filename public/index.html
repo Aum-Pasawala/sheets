@@ -8,7 +8,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
 </head>
 <body>
-    <!-- Leaderboard -->
     <div id="leaderboard" class="leaderboard">
         <h3>Leaderboard</h3>
         <table>
@@ -22,11 +21,11 @@
                     <th>P</th>
                 </tr>
             </thead>
-            <tbody id="leaderboard-body"></tbody>
+            <tbody id="leaderboard-body">
+            </tbody>
         </table>
     </div>
 
-    <!-- Buy-In Modal -->
     <div id="buyInScreen" class="modal-overlay">
         <div class="modal-content">
             <h2>Buy-in to the Game</h2>
@@ -37,7 +36,6 @@
         </div>
     </div>
 
-    <!-- Ace Choice Modal -->
     <div id="aceChoiceScreen" class="modal-overlay" style="display: none;">
         <div class="modal-content">
             <h2>You drew an Ace!</h2>
@@ -47,7 +45,6 @@
         </div>
     </div>
 
-    <!-- Add Credit Modal -->
     <div id="creditScreen" class="modal-overlay" style="display: none;">
         <div class="modal-content">
             <h2>Add Credit</h2>
@@ -58,7 +55,6 @@
         </div>
     </div>
 
-    <!-- Game Table -->
     <div class="game-table" id="gameTable" style="display: none;">
         <button id="startGameBtn" class="start-game-btn" style="display: none;">Start Game</button>
 
@@ -86,11 +82,13 @@
       
         <div class="message-area" id="message">Connecting...</div>
     
-        <!-- Action Buttons (UPDATED) -->
         <div class="action-area" id="actionArea" style="display: none;">
             <input type="number" id="betInput" step="0.01" placeholder="Enter bet">
             <button id="betButton">Bet</button>
-            <button id="betPotButton" class="pot-btn">Pot</button> <!-- ✅ NEW BUTTON -->
+
+            <!-- ✅ New Pot Button -->
+            <button id="potButton" class="pot-btn">Pot</button>
+
             <button id="passButton">Pass</button>
             <button id="creditButton" class="credit-btn">Credit</button>
         </div>
@@ -103,7 +101,6 @@
         <button id="sixSevenBtn" class="six-seven-btn" style="display: none;">6-7!</button>
     </div>
 
-    <!-- Chat Section -->
     <div id="chat-container" class="chat-container">
         <div id="chat-window" class="chat-window"></div>
         <div class="chat-input-area">
@@ -112,7 +109,6 @@
         </div>
     </div>
 
-    <!-- Socket + Client -->
     <script src="/socket.io/socket.io.js"></script>
     <script src="client.js"></script>
 </body>
