@@ -1,31 +1,3 @@
-/* Table Bet Chips */
-#table-bets {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 1003;
-}
-.table-bet-chip {
-  position: absolute;
-  background: #ffe066;
-  color: #222;
-  border: 2px solid #bfa100;
-  border-radius: 50%;
-  width: 54px;
-  height: 54px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-  font-weight: bold;
-  box-shadow: 0 0 12px #bfa100, 0 0 2px #fff;
-  pointer-events: none;
-  transition: top 0.3s, left 0.3s;
-  z-index: 1004;
-}
 /* Basic Setup */
 body {
   background-color: #1a1a1a;
