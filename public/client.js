@@ -418,9 +418,13 @@ socket.on('promptAceChoice', () => aceChoiceScreen.style.display = 'flex');
 
 socket.on('cardResult', (data) => {
   renderCard(nextCardElem, data.card);
+  nextCardElem.classList.add('visible');
+  
   if (data.isDramatic) nextCardElem.classList.add('dramatic-flip');
+  
+  // Flip the middle card to show the result
   setTimeout(() => {
-    nextCardElem.classList.add('is-flipping');
+    nextCardElem.style.transform = 'rotateY(0deg)'; // Flip to face-up
     if (soundsReady) sounds.cardFlip();
   }, 100);
 
@@ -470,6 +474,8 @@ socket.on('cardResult', (data) => {
       if (face) face.classList.remove('post-hit');
     }, data.isDramatic ? 2200 : 1500);
   }
+  
+  console.log('Middle card revealed:', data.card, 'Transform:', nextCardElem.style.transform);
 });
 
 socket.on('clearResult', () => {
