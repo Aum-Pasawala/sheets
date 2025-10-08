@@ -1,0 +1,21 @@
+/* Video/backdrop styling */
+#videoBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: 2999;
+  display: none;
+}
+#postVideo {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(90vw, 900px);
+  max-height: 90vh;
+  display: none;
+  z-index: 3000;
+  border-radius: 12px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.9);
+  background: black;
+}
