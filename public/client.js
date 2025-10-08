@@ -48,13 +48,10 @@ console.log('🎵 Background Music Element:', bgMusic ? 'FOUND ✅' : 'NOT FOUND
 if (bgMusic) {
   console.log('🎵 Music Source:', bgMusic.src);
   console.log('🎵 Current Source:', bgMusic.currentSrc);
-  
-  // Test if file exists
-  bgMusic.addEventListener('error', (e) => {
+  bgMusic.addEventListener('error', () => {
     console.error('❌ MUSIC FILE ERROR - File not found or cannot load!');
     console.error('Make sure casino-music.mp3 exists in public folder');
   });
-  
   bgMusic.addEventListener('canplaythrough', () => {
     console.log('✅ Music file loaded and ready to play');
   });
@@ -161,7 +158,6 @@ function renderCard(element, card, isFaceUp = false) {
     <span class="bottom">${card.rank}${card.suit}</span>
   `;
 
-  // For outer cards, immediately show face-up
   if (isFaceUp) {
     element.classList.add('is-flipping');
   }
@@ -201,13 +197,15 @@ function updateLeaderboard(players, stats, myId) {
 }
 
 // --- Event Listeners ---
-getStartedBtn.addEventListener('click', async () => {
-  await initAudio();
-  homePage.style.display = 'none';
-  buyInScreen.style.display = 'flex';
-  sounds.click();
-  startMusic();
-});
+if (getStartedBtn) {
+  getStartedBtn.addEventListener('click', async () => {
+    await initAudio();
+    if (homePage) homePage.style.display = 'none';
+    if (buyInScreen) buyInScreen.style.display = 'flex';
+    sounds.click();
+    startMusic();
+  });
+}
 
 joinGameBtn.addEventListener('click', () => {
   const buy = parseFloat(buyInInput.value);
@@ -217,7 +215,7 @@ joinGameBtn.addEventListener('click', () => {
     buyInScreen.style.display = 'none';
     gameTable.style.display = 'flex';
     chatContainer.style.display = 'flex';
-    leaderboard.style.display = 'block';
+    if (leaderboard) leaderboard.style.display = 'block';
     sounds.click();
     startMusic();
   }
@@ -240,14 +238,11 @@ betButton.addEventListener('click', () => {
   if (!canBet) return;
   const amt = parseFloat(betInput.value);
   const player = players[myPlayerId];
-  
   if (!amt || amt <= 0) return;
-  
   if (player && amt > player.chips) {
     alert(`Insufficient funds! You have $${player.chips.toFixed(2)}.\n\nPlease:\n• Add more credit, or\n• Bet a smaller amount`);
     return;
   }
-  
   canBet = false;
   socket.emit('playerBet', amt);
   betInput.value = '';
@@ -264,13 +259,11 @@ passButton.addEventListener('click', () => {
 potButton.addEventListener('click', () => {
   if (!canBet) return;
   const player = players[myPlayerId];
-  
   if (currentPotValue > 0) {
     if (player && currentPotValue > player.chips) {
       alert(`Insufficient funds to bet the pot!\n\nPot: $${currentPotValue.toFixed(2)}\nYour chips: $${player.chips.toFixed(2)}\n\nPlease:\n• Add more credit, or\n• Bet a smaller amount`);
       return;
     }
-    
     canBet = false;
     socket.emit('playerBet', currentPotValue);
     sounds.chips();
@@ -311,36 +304,35 @@ potRebuildInput.addEventListener('change', () => {
 });
 
 // --- Audio Toggles ---
-sfxToggle.addEventListener('change', (e) => {
-  sfxEnabled = e.target.checked;
-  console.log('🔊 SFX:', sfxEnabled ? 'ON' : 'OFF');
-});
-
-musicToggle.addEventListener('change', (e) => {
-  musicEnabled = e.target.checked;
-  if (bgMusic) {
-    if (musicEnabled) {
-      bgMusic.play().catch(e => console.log('Music play error:', e));
-    } else {
-      bgMusic.pause();
+if (sfxToggle) {
+  sfxToggle.addEventListener('change', (e) => {
+    sfxEnabled = e.target.checked;
+    console.log('🔊 SFX:', sfxEnabled ? 'ON' : 'OFF');
+  });
+}
+if (musicToggle) {
+  musicToggle.addEventListener('change', (e) => {
+    musicEnabled = e.target.checked;
+    if (bgMusic) {
+      if (musicEnabled) {
+        bgMusic.play().catch(err => console.log('Music play error:', err));
+      } else {
+        bgMusic.pause();
+      }
     }
-  }
-  if (postVideo) {
-    postVideo.muted = !musicEnabled;
-  }
-  console.log('🎵 Music/Video:', musicEnabled ? 'ON' : 'OFF');
-});
+    if (postVideo) postVideo.muted = !musicEnabled;
+    console.log('🎵 Music/Video:', musicEnabled ? 'ON' : 'OFF');
+  });
+}
 
 // --- Socket Events ---
 socket.on('connect', () => {
   myPlayerId = socket.id;
   console.log('🔌 Connected:', myPlayerId);
-  
   if (postVideo) {
     postVideo.playsInline = true;
     postVideo.preload = 'auto';
   }
-  
   if (bgMusic) {
     bgMusic.loop = true;
     bgMusic.volume = 0.6;
@@ -382,28 +374,15 @@ socket.on('gameState', (state) => {
 
 socket.on('dealCard', (data) => {
   const elem = data.cardSlot === 1 ? card1Elem : card2Elem;
-  
-  // Clear any existing classes and reset transform
   elem.className = 'card';
   elem.style.opacity = '0';
   elem.style.transform = '';
-  
-  // Render the card with face-up flag
   renderCard(elem, data.card, true);
-  
-  // Add slide animation
   elem.classList.add(data.cardSlot === 1 ? 'slide-in-left' : 'slide-in-right');
   elem.classList.add('visible');
-  
-  // FORCE the card to show face-up with direct transform
-  elem.style.transform = 'rotateY(180deg)';
+  elem.style.transform = 'rotateY(180deg)'; // show face
   elem.style.opacity = '1';
-  
   if (soundsReady) sounds.cardSlide();
-  
-  console.log(`Card ${data.cardSlot} dealt:`, data.card);
-  console.log('Transform applied:', elem.style.transform);
-  console.log('Classes:', elem.className);
 });
 
 socket.on('dealMiddleCardPlaceholder', () => {
@@ -420,25 +399,22 @@ socket.on('cardResult', (data) => {
   // Render the actual card value on the middle card
   const front = nextCardElem.querySelector('.card-front');
   const color = (data.card.suit === '♥' || data.card.suit === '♦') ? 'red' : 'black';
-  
-  // Clear and set card classes
+
+  // Reset and set classes/content
   nextCardElem.className = 'card card-middle visible';
   nextCardElem.classList.add(color);
-  
-  // Set the card content
   front.innerHTML = `
     <span class="top">${data.card.rank}${data.card.suit}</span>
     <span>${data.card.suit}</span>
     <span class="bottom">${data.card.rank}${data.card.suit}</span>
   `;
-  
+
   if (data.isDramatic) nextCardElem.classList.add('dramatic-flip');
-  
-  // Flip the card to show face after a brief delay
+
+  // ✅ Flip the MIDDLE card the same way it used to: use the class that rotates to 180deg
   setTimeout(() => {
-    nextCardElem.style.transform = 'rotateY(0deg)'; // Flip from 180deg to 0deg
+    nextCardElem.classList.add('is-flipping');
     if (soundsReady) sounds.cardFlip();
-    console.log('Middle card flipped:', data.card);
   }, 100);
 
   if (data.isPost) {
@@ -490,27 +466,29 @@ socket.on('cardResult', (data) => {
 });
 
 socket.on('clearResult', () => {
-  // Reset cards to initial state
   card1Elem.className = 'card';
   card1Elem.style.opacity = '0';
   card2Elem.className = 'card';
   card2Elem.style.opacity = '0';
   nextCardElem.className = 'card card-middle';
   nextCardElem.style.opacity = '0';
-  
   renderCard(card1Elem, null);
   renderCard(card2Elem, null);
   renderCard(nextCardElem, null);
   canBet = false;
-  
-  console.log('Cards cleared and reset');
 });
 
+// ✅ Handle generic messages (win/loss) AND restore betting after invalid bet
 socket.on('message', (data) => {
   messageElem.textContent = data.text;
   if (data.isEmphasis) {
     messageElem.classList.add('emphasis');
     setTimeout(() => messageElem.classList.remove('emphasis'), 2800);
+  }
+  // ✅ If server says "Invalid bet.", let the player try again
+  if (data.text && /invalid bet/i.test(data.text)) {
+    canBet = true;
+    if (betInput) betInput.focus();
   }
   if (data.actorId) {
     if (data.outcome === 'win') {
