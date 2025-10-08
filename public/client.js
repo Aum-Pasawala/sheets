@@ -325,10 +325,13 @@ musicToggle.addEventListener('change', (e) => {
       bgMusic.pause();
     }
   }
-  if (postVideo) {
-    postVideo.muted = !musicEnabled;
-  }
-  console.log('🎵 Music/Video:', musicEnabled ? 'ON' : 'OFF');
+  console.log('🎵 Music:', musicEnabled ? 'ON' : 'OFF');
+});
+
+// Post Video Toggle
+postToggle.addEventListener('change', (e) => {
+  postVideoEnabled = e.target.checked;
+  console.log('📹 Post Video Sound:', postVideoEnabled ? 'ON' : 'OFF');
 });
 
 // --- Socket Events ---
@@ -407,11 +410,29 @@ socket.on('dealCard', (data) => {
 });
 
 socket.on('dealMiddleCardPlaceholder', () => {
-  renderCard(nextCardElem, null);
-  nextCardElem.classList.remove('slide-in-left','slide-in-right','slide-in-middle');
-  nextCardElem.classList.add('slide-in-middle');
+  console.log('📋 Middle card placeholder - setting up');
+  
+  // Get elements
+  const front = nextCardElem.querySelector('.card-front');
+  const back = nextCardElem.querySelector('.card-back');
+  
+  // Clear front
+  front.innerHTML = '';
+  
+  // Set back with "?" 
+  back.innerHTML = '?';
+  
+  // Set up the card to show back (checkered with "?")
+  nextCardElem.className = 'card card-middle visible';
+  nextCardElem.style.transform = 'rotateY(180deg)'; // Shows the BACK
+  nextCardElem.style.opacity = '1';
+  
+  // NO animation - just appear instantly with checkered back
+  
   if (soundsReady) sounds.cardSlide();
   canBet = true;
+  
+  console.log('📋 Middle card ready - checkered back showing');
 });
 
 socket.on('promptAceChoice', () => aceChoiceScreen.style.display = 'flex');
@@ -453,8 +474,8 @@ socket.on('cardResult', (data) => {
         videoBackdrop.style.display = 'block';
         postVideo.style.display = 'block';
         postVideo.currentTime = 0;
-        postVideo.volume = musicEnabled ? 1 : 0;
-        postVideo.muted = !musicEnabled;
+        postVideo.volume = postVideoEnabled ? 1 : 0; // Use postVideoEnabled toggle
+        postVideo.muted = !postVideoEnabled;
         const playPromise = postVideo.play();
         if (playPromise) {
           playPromise.then(() => {
@@ -490,20 +511,34 @@ socket.on('cardResult', (data) => {
 });
 
 socket.on('clearResult', () => {
-  // Reset cards to initial state
+  console.log('🧹 Clearing cards for next turn');
+  
+  // Reset outer cards
   card1Elem.className = 'card';
   card1Elem.style.opacity = '0';
+  card1Elem.style.transform = '';
+  
   card2Elem.className = 'card';
   card2Elem.style.opacity = '0';
+  card2Elem.style.transform = '';
+  
+  // Reset middle card but KEEP it at 180deg (back showing)
   nextCardElem.className = 'card card-middle';
   nextCardElem.style.opacity = '0';
+  nextCardElem.style.transform = 'rotateY(180deg)'; // Start at 180deg so no flip needed
   
+  // Clear content
   renderCard(card1Elem, null);
   renderCard(card2Elem, null);
-  renderCard(nextCardElem, null);
+  
+  const front = nextCardElem.querySelector('.card-front');
+  const back = nextCardElem.querySelector('.card-back');
+  front.innerHTML = '';
+  back.innerHTML = '';
+  
   canBet = false;
   
-  console.log('Cards cleared and reset');
+  console.log('✅ Cards cleared - middle card already at 180deg');
 });
 
 socket.on('message', (data) => {
