@@ -68,7 +68,7 @@ let playerStreaks = {};
 let isVideoPlaying = false;
 let canBet = false;
 let sfxEnabled = true;
-let musicEnabled = true;
+let musicEnabled = false;
 let players = {};
 
 // --- Sound Effects ---
