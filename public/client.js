@@ -557,6 +557,15 @@ socket.on('clearResult', () => {
 
 socket.on('message', (data) => {
   messageElem.textContent = data.text;
+  if (data.text === 'Invalid bet.') {
+    canBet = true;
+    // keep the action area visible if it's your turn
+    if (actionArea && players && players[myPlayerId]) {
+      actionArea.style.display = 'flex';
+    }
+    return; // we can early-return if you don't want emphasis effects here
+  }
+  
   if (data.isEmphasis) {
     messageElem.classList.add('emphasis');
     setTimeout(() => messageElem.classList.remove('emphasis'), 2800);
