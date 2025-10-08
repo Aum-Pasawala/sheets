@@ -43,6 +43,16 @@ const bgMusic = document.getElementById('bgMusic');
 const sfxToggle = document.getElementById('sfxToggle');
 const musicToggle = document.getElementById('musicToggle');
 
+const postToggle = document.getElementById('postToggle');
+let postVideoEnabled = postToggle ? postToggle.checked : true;
+
+if (postToggle) {
+  postToggle.addEventListener('change', (e) => {
+    postVideoEnabled = e.target.checked;
+    console.log('📹 Post Video Sound:', postVideoEnabled ? 'ON' : 'OFF');
+  });
+}
+
 // Debug check
 console.log('🎵 Background Music Element:', bgMusic ? 'FOUND ✅' : 'NOT FOUND ❌');
 if (bgMusic) {
