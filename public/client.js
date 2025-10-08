@@ -206,7 +206,11 @@ getStartedBtn.addEventListener('click', async () => {
   homePage.style.display = 'none';
   buyInScreen.style.display = 'flex';
   sounds.click();
-  startMusic();
+
+  // ✅ Only start music if toggle is ON
+  if (musicEnabled && musicToggle.checked) {
+    startMusic();
+  }
 });
 
 joinGameBtn.addEventListener('click', () => {
