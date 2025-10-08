@@ -278,6 +278,9 @@ io.on('connection', (socket) => {
             socket.emit('message', { text: "Invalid bet." });
             return;
         }
+        
+        io.emit('playerBetPlaced', { playerId: socket.id, amount: betAmount });
+
         const nextCard = deck.pop();
         const [lowCard, highCard] = currentCards;
         let messageText, isPost = false, outcome;
