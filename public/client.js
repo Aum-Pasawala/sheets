@@ -68,7 +68,7 @@ let playerStreaks = {};
 let isVideoPlaying = false;
 let canBet = false;
 let sfxEnabled = true;
-let musicEnabled = true;
+let musicEnabled = false;
 let players = {};
 
 // --- Sound Effects ---
@@ -206,7 +206,11 @@ getStartedBtn.addEventListener('click', async () => {
   homePage.style.display = 'none';
   buyInScreen.style.display = 'flex';
   sounds.click();
-  startMusic();
+
+  // ✅ Only start music if toggle is ON
+  if (musicEnabled && musicToggle.checked) {
+    startMusic();
+  }
 });
 
 joinGameBtn.addEventListener('click', () => {
@@ -564,3 +568,21 @@ socket.on('message', (data) => {
 socket.on('start67Challenge', () => sixSevenBtn.style.display = 'block');
 socket.on('end67Challenge', () => sixSevenBtn.style.display = 'none');
 socket.on('newChatMessage', addChatMessage);
+
+// --- Show Bet on Table ---
+socket.on('playerBetPlaced', (data) => {
+  const playerDiv = document.querySelector(`.player-seat.player-pos-${Object.keys(players).indexOf(data.playerId) + 1}`);
+  if (!playerDiv) return;
+
+  // Create floating bet display
+  const betElem = document.createElement('div');
+  betElem.className = 'bet-display';
+  betElem.textContent = `$${data.amount.toFixed(2)}`;
+  playerDiv.appendChild(betElem);
+
+  // Animate & remove after 2.5 seconds
+  setTimeout(() => {
+    betElem.classList.add('fade-out');
+    setTimeout(() => betElem.remove(), 500);
+  }, 2500);
+});

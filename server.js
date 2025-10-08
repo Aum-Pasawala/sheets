@@ -278,6 +278,9 @@ io.on('connection', (socket) => {
             socket.emit('message', { text: "Invalid bet." });
             return;
         }
+        
+        io.emit('playerBetPlaced', { playerId: socket.id, amount: betAmount });
+
         const nextCard = deck.pop();
         const [lowCard, highCard] = currentCards;
         let messageText, isPost = false, outcome;
@@ -327,52 +330,53 @@ io.on('connection', (socket) => {
     });
 
     // --- FIXED ADMIN SWITCH LOGIC ---
-    socket.on('disconnect', () => {
-        if (waitingPlayers[socket.id]) {
-            broadcastSystemMessage(`${waitingPlayers[socket.id].playerData.name} left the waiting queue.`);
-            delete waitingPlayers[socket.id];
-            return;
+   socket.on('disconnect', () => {
+    if (waitingPlayers[socket.id]) {
+        broadcastSystemMessage(`${waitingPlayers[socket.id].playerData.name} left the waiting queue.`);
+        delete waitingPlayers[socket.id];
+        return;
+    }
+
+    if (players[socket.id]) {
+        const wasAdmin = (socket.id === gameAdminId);
+        const disconnectedPlayerIndex = playerOrder.indexOf(socket.id);
+        const playerName = players[socket.id].name;
+
+        // Remove from game first
+        delete players[socket.id];
+        delete playerStats[socket.id];
+        playerOrder = playerOrder.filter(id => id !== socket.id);
+
+        broadcastSystemMessage(`${playerName} has left the game.`);
+
+        // ✅ FIX: Reassign admin safely after removal
+        if (wasAdmin && playerOrder.length > 0) {
+            gameAdminId = playerOrder[0];
+            broadcastSystemMessage(`${players[gameAdminId].name} is the new game admin.`);
+            broadcastGameState(); // ✅ Immediately notify all clients
+        } else if (playerOrder.length === 0) {
+            gameAdminId = null;
         }
 
-        if (players[socket.id]) {
-            const wasAdmin = (socket.id === gameAdminId);
-            const disconnectedPlayerIndex = playerOrder.indexOf(socket.id);
-            const playerName = players[socket.id].name;
+        // ✅ Handle game state conditions correctly
+        if (playerOrder.length < MIN_PLAYERS && isGameRunning) {
+            isGameRunning = false;
+            broadcastMessage('Not enough players. Game paused.');
+        }
 
-            // ✅ FIX: Assign new admin BEFORE deleting the old one
-            if (wasAdmin) {
-                const newOrder = playerOrder.filter(id => id !== socket.id);
-                if (newOrder.length > 0) {
-                    gameAdminId = newOrder[0];
-                    broadcastSystemMessage(`${players[gameAdminId].name} is the new game admin.`);
-                } else {
-                    gameAdminId = null;
-                }
-            }
-
-            broadcastSystemMessage(`${playerName} has left the game.`);
-            delete players[socket.id];
-            delete playerStats[socket.id];
-            playerOrder = playerOrder.filter(id => id !== socket.id);
-
-            if (playerOrder.length < MIN_PLAYERS && isGameRunning) {
-                isGameRunning = false;
-                broadcastMessage('Not enough players. Game paused.');
-            }
-
-            if (playerOrder.length > 0 && isGameRunning) {
-                if (disconnectedPlayerIndex < currentPlayerIndex) {
-                    currentPlayerIndex--;
-                } else if (disconnectedPlayerIndex === currentPlayerIndex && currentPlayerIndex === playerOrder.length) {
-                    currentPlayerIndex = -1;
-                }
-            } else {
-                pot = 0;
-                currentCards = [];
+        if (playerOrder.length > 0 && isGameRunning) {
+            if (disconnectedPlayerIndex < currentPlayerIndex) {
+                currentPlayerIndex--;
+            } else if (disconnectedPlayerIndex === currentPlayerIndex && currentPlayerIndex === playerOrder.length) {
                 currentPlayerIndex = -1;
-                isGameRunning = false;
-                gameAdminId = null;
             }
+        } else if (playerOrder.length === 0) {
+            pot = 0;
+            currentCards = [];
+            currentPlayerIndex = -1;
+            isGameRunning = false;
+            gameAdminId = null;
+        }
 
             broadcastGameState();
         }
