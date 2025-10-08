@@ -286,7 +286,7 @@ body.screen-shake {
 }
 
 .card.is-flipping {
-  transform: rotateY(180deg);
+  transform: rotateY(0deg);
 }
 .card.post-hit .card-face {
   animation: insane-shake 0.7s ease-in-out;
