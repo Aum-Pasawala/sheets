@@ -412,20 +412,20 @@ socket.on('dealCard', (data) => {
 socket.on('dealMiddleCardPlaceholder', () => {
   console.log('📋 Middle card placeholder - setting up');
   
-  // Get elements
   const front = nextCardElem.querySelector('.card-front');
-  const back = nextCardElem.querySelector('.card-back');
-  
-  // Clear front
-  front.innerHTML = '';
-  
-  // Set back with "?" 
-  back.innerHTML = '?';
-  
-  // Set up the card to show back (checkered with "?")
-  nextCardElem.className = 'card card-middle visible';
-  nextCardElem.style.transform = 'rotateY(180deg)'; // Shows the BACK
+  const back  = nextCardElem.querySelector('.card-back');
+
+  // clean up faces
+  if (front) front.innerHTML = '';
+
+  // IMPORTANT: let CSS control the look + rotation
+  nextCardElem.className = 'card card-middle visible placeholder';
+  nextCardElem.style.transform = '';   // clear inline transform so .card.card-middle (180deg) wins
   nextCardElem.style.opacity = '1';
+
+  // (no flip/slide animation needed here)
+  if (soundsReady) sounds.cardSlide();
+  canBet = true;
   
   // NO animation - just appear instantly with checkered back
   
