@@ -162,7 +162,6 @@ async function dealSecondCard() {
     await new Promise(resolve => setTimeout(resolve, 500));
     io.emit('dealMiddleCardPlaceholder');
 
-    // Check if both outer cards are the same
     if (currentCards[0].value === currentCards[1].value) {
         const currentPlayerId = playerOrder[currentPlayerIndex];
         const penalty = 1.00;
@@ -185,15 +184,13 @@ async function dealSecondCard() {
             is67ChallengeActive = false;
             io.emit('end67Challenge');
             let loserId = null;
-            
-            // Find the last person who pressed (or didn't press)
+
             if (sixSevenPresses.length < playerOrder.length) {
                 const playersWhoDidNotPress = playerOrder.filter(pId => players[pId] && !sixSevenPresses.includes(pId));
                 if (playersWhoDidNotPress.length > 0) {
                     loserId = playersWhoDidNotPress[playersWhoDidNotPress.length - 1];
                 }
             } else if (sixSevenPresses.length > 0) {
-                // Everyone pressed, last one to press loses
                 loserId = sixSevenPresses[sixSevenPresses.length - 1];
             }
 
@@ -329,6 +326,7 @@ io.on('connection', (socket) => {
         }
     });
 
+    // --- FIXED ADMIN SWITCH LOGIC ---
     socket.on('disconnect', () => {
         if (waitingPlayers[socket.id]) {
             broadcastSystemMessage(`${waitingPlayers[socket.id].playerData.name} left the waiting queue.`);
@@ -339,19 +337,29 @@ io.on('connection', (socket) => {
         if (players[socket.id]) {
             const wasAdmin = (socket.id === gameAdminId);
             const disconnectedPlayerIndex = playerOrder.indexOf(socket.id);
-            broadcastSystemMessage(`${players[socket.id].name} has left the game.`);
+            const playerName = players[socket.id].name;
+
+            // ✅ FIX: Assign new admin BEFORE deleting the old one
+            if (wasAdmin) {
+                const newOrder = playerOrder.filter(id => id !== socket.id);
+                if (newOrder.length > 0) {
+                    gameAdminId = newOrder[0];
+                    broadcastSystemMessage(`${players[gameAdminId].name} is the new game admin.`);
+                } else {
+                    gameAdminId = null;
+                }
+            }
+
+            broadcastSystemMessage(`${playerName} has left the game.`);
             delete players[socket.id];
             delete playerStats[socket.id];
             playerOrder = playerOrder.filter(id => id !== socket.id);
-            
-            if (wasAdmin && playerOrder.length > 0) {
-                gameAdminId = playerOrder[0];
-                broadcastSystemMessage(`${players[gameAdminId].name} is the new game admin.`);
-            }
+
             if (playerOrder.length < MIN_PLAYERS && isGameRunning) {
                 isGameRunning = false;
                 broadcastMessage('Not enough players. Game paused.');
             }
+
             if (playerOrder.length > 0 && isGameRunning) {
                 if (disconnectedPlayerIndex < currentPlayerIndex) {
                     currentPlayerIndex--;
@@ -359,8 +367,13 @@ io.on('connection', (socket) => {
                     currentPlayerIndex = -1;
                 }
             } else {
-                pot = 0; currentCards = []; currentPlayerIndex = -1; isGameRunning = false; gameAdminId = null;
+                pot = 0;
+                currentCards = [];
+                currentPlayerIndex = -1;
+                isGameRunning = false;
+                gameAdminId = null;
             }
+
             broadcastGameState();
         }
     });
