@@ -42,6 +42,7 @@ const videoBackdrop = document.getElementById('videoBackdrop');
 const bgMusic = document.getElementById('bgMusic');
 const sfxToggle = document.getElementById('sfxToggle');
 const musicToggle = document.getElementById('musicToggle');
+const BIG_BET_THRESHOLD = 80;
 
 const postToggle = document.getElementById('postToggle');
 let postVideoEnabled = postToggle ? postToggle.checked : true;
@@ -478,50 +479,53 @@ socket.on('cardResult', (data) => {
 
   if (data.isPost) {
     setTimeout(() => {
-      const face = nextCardElem.querySelector('.card-front');
-      if (face) face.classList.add('post-hit');
-      body.classList.add('screen-shake');
-      if (soundsReady) sounds.post();
+    const face = nextCardElem.querySelector('.card-front');
+    if (face) face.classList.add('post-hit');
+    body.classList.add('screen-shake');
 
-      if (postVideo && !isVideoPlaying) {
-        isVideoPlaying = true;
-        videoBackdrop.style.display = 'block';
-        postVideo.style.display = 'block';
-        postVideo.currentTime = 0;
-        postVideo.volume = postVideoEnabled ? 1 : 0; // Use postVideoEnabled toggle
-        postVideo.muted = !postVideoEnabled;
-        const playPromise = postVideo.play();
-        if (playPromise) {
-          playPromise.then(() => {
-            const check = setInterval(() => {
-              if (postVideo.currentTime >= 15) {
-                postVideo.pause();
-                postVideo.style.display = 'none';
-                videoBackdrop.style.display = 'none';
-                clearInterval(check);
-                isVideoPlaying = false;
-              }
-            }, 200);
-          }).catch(() => {
-            postVideo.style.display = 'none';
-            videoBackdrop.style.display = 'none';
-            isVideoPlaying = false;
-          });
-        }
-        postVideo.onended = () => {
+    // always play sound
+    if (soundsReady) sounds.post();
+
+    // ✅ Only play video if bet >= 80
+    if (data.betAmount >= BIG_BET_THRESHOLD && postVideo && !isVideoPlaying) {
+      isVideoPlaying = true;
+      videoBackdrop.style.display = 'block';
+      postVideo.style.display = 'block';
+      postVideo.currentTime = 0;
+      postVideo.volume = postVideoEnabled ? 1 : 0; // Use postVideoEnabled toggle
+      postVideo.muted = !postVideoEnabled;
+      const playPromise = postVideo.play();
+      if (playPromise) {
+        playPromise.then(() => {
+          const check = setInterval(() => {
+            if (postVideo.currentTime >= 15) {
+              postVideo.pause();
+              postVideo.style.display = 'none';
+              videoBackdrop.style.display = 'none';
+              clearInterval(check);
+              isVideoPlaying = false;
+            }
+          }, 200);
+        }).catch(() => {
           postVideo.style.display = 'none';
           videoBackdrop.style.display = 'none';
           isVideoPlaying = false;
-        };
+        });
       }
-    }, data.isDramatic ? 1200 : 600);
+      postVideo.onended = () => {
+        postVideo.style.display = 'none';
+        videoBackdrop.style.display = 'none';
+        isVideoPlaying = false;
+      };
+    }
+  }, data.isDramatic ? 1200 : 600);
 
-    setTimeout(() => {
-      body.classList.remove('screen-shake');
-      const face = nextCardElem.querySelector('.card-front');
-      if (face) face.classList.remove('post-hit');
-    }, data.isDramatic ? 2200 : 1500);
-  }
+  setTimeout(() => {
+    body.classList.remove('screen-shake');
+    const face = nextCardElem.querySelector('.card-front');
+    if (face) face.classList.remove('post-hit');
+  }, data.isDramatic ? 2200 : 1500);
+}
 });
 
 socket.on('clearResult', () => {
