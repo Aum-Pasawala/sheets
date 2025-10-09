@@ -53,7 +53,16 @@ let postVideoEnabled = postToggle ? postToggle.checked : true;
 if (postToggle) {
   postToggle.addEventListener('change', (e) => {
     postVideoEnabled = e.target.checked;
-    console.log('📹 Post Video Sound:', postVideoEnabled ? 'ON' : 'OFF');
+
+    if (!postVideoEnabled && postVideo) {
+      // Immediately stop and hide any playing post video
+      postVideo.pause();
+      postVideo.currentTime = 0;
+      postVideo.style.display = 'none';
+      videoBackdrop.style.display = 'none';
+    }
+
+    console.log('📹 Post Video:', postVideoEnabled ? 'ENABLED' : 'DISABLED');
   });
 }
 

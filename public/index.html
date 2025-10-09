@@ -95,7 +95,7 @@
             <h2>Buy-in to the Game</h2>
             <p>Enter your name and buy-in amount to join the action!</p>
             <input type="text" id="nameInput" placeholder="Enter your name" maxlength="15">
-            <input type="number" id="buyInInput" value="100" step="1" placeholder="Enter amount" min="0.50">
+            <input type="number" id="buyInInput" value="100" step="1.00" placeholder="Enter amount" min="0.50">
             <button id="joinGameBtn">Join Game</button>
         </div>
     </div>
@@ -113,7 +113,7 @@
         <div class="modal-content">
             <h2>Add Credit</h2>
             <p>How much would you like to add to your cash?</p>
-            <input type="number" id="creditInput" step="1" placeholder="Enter amount">
+            <input type="number" id="creditInput" step="1.00" placeholder="Enter amount">
             <button id="addCreditBtn">Add Credit</button>
             <button id="cancelCreditBtn" class="cancel-btn">Cancel</button>
         </div>
@@ -147,7 +147,7 @@
         <div class="message-area" id="message">Connecting...</div>
     
         <div class="action-area" id="actionArea" style="display: none;">
-            <input type="number" id="betInput" step="1" placeholder="Enter bet">
+            <input type="number" id="betInput" step="1.00" placeholder="Enter bet">
             <button id="betButton">Bet <kbd>B</kbd></button>
             <button id="potButton" class="pot-btn">Pot <kbd>P</kbd></button>
             <button id="passButton">Pass <kbd>Space</kbd></button>
@@ -156,7 +156,7 @@
 
         <div class="settings-area">
             <label for="potRebuildInput">Pot Rebuild:</label>
-            <input type="number" id="potRebuildInput" value="5" step="1">
+            <input type="number" id="potRebuildInput" value="5" step="1.00">
             
             <!-- Audio Controls -->
             <div class="audio-controls">
