@@ -498,7 +498,7 @@ socket.on('cardResult', (data) => {
     nextCardElem.style.transform = 'rotateY(0deg)'; // Flip from 180deg to 0deg
     if (soundsReady) sounds.cardFlip();
     console.log('Middle card flipped:', data.card);
-  }, 100);
+  }, 50);
 
   if (data.isPost) {
     setTimeout(() => {
@@ -541,13 +541,13 @@ socket.on('cardResult', (data) => {
         isVideoPlaying = false;
       };
     }
-  }, data.isDramatic ? 1200 : 600);
+  }, data.isDramatic ? 800 : 400);
 
   setTimeout(() => {
     body.classList.remove('screen-shake');
     const face = nextCardElem.querySelector('.card-front');
     if (face) face.classList.remove('post-hit');
-  }, data.isDramatic ? 2200 : 1500);
+  }, data.isDramatic ? 1400 : 900);
 }
 });
 

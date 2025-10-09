@@ -136,7 +136,7 @@ async function startNewTurn() {
     broadcastGameState();
     broadcastMessage(`${players[currentPlayerId].name}'s turn.`);
 
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 500));
     let card1 = deck.pop();
     currentCards.push(card1);
     io.emit('dealCard', { card: card1, cardSlot: 1 });
@@ -148,7 +148,7 @@ async function startNewTurn() {
         return;
     }
 
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 400));
     dealSecondCard();
 }
 
@@ -159,7 +159,7 @@ async function dealSecondCard() {
     io.emit('dealCard', { card: card2, cardSlot: 2 });
     currentCards.sort((a, b) => a.value - b.value);
 
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 300));
     io.emit('dealMiddleCardPlaceholder');
 
     if (currentCards[0].value === currentCards[1].value) {
@@ -168,7 +168,7 @@ async function dealSecondCard() {
         players[currentPlayerId].chips -= penalty;
         pot += penalty;
         broadcastMessage(`Same cards! ${players[currentPlayerId].name} pays $${penalty.toFixed(2)} and passes.`, true);
-        setTimeout(startNewTurn, 2000);
+        setTimeout(startNewTurn, 1000);
         return;
     }
 
@@ -305,15 +305,15 @@ io.on('connection', (socket) => {
         
         setTimeout(() => {
             broadcastMessage(messageText, true, player.id, outcome);
-            setTimeout(startNewTurn, 2500);
-        }, isDramatic ? 2500 : 1200);
+            setTimeout(startNewTurn, 1500);
+        }, isDramatic ? 1500 : 700);
     });
     
     socket.on('playerPass', () => {
         const player = players[socket.id];
         if (!isGameRunning || !player || socket.id !== playerOrder[currentPlayerIndex] || isWaitingForAceChoice) return;
         broadcastMessage(`${player.name} passes.`, false, socket.id);
-        setTimeout(startNewTurn, 1000);
+        setTimeout(startNewTurn, 600);
     });
     
     socket.on('pressed67', () => {
