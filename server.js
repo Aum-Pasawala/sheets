@@ -301,7 +301,7 @@ io.on('connection', (socket) => {
         }
         
         const isDramatic = betAmount >= 40;
-        io.emit('cardResult', { card: nextCard, isPost, isDramatic });
+        io.emit('cardResult', { card: nextCard, isPost, isDramatic, betAmount });
         
         setTimeout(() => {
             broadcastMessage(messageText, true, player.id, outcome);
