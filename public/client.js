@@ -43,6 +43,9 @@ const bgMusic = document.getElementById('bgMusic');
 const sfxToggle = document.getElementById('sfxToggle');
 const musicToggle = document.getElementById('musicToggle');
 const BIG_BET_THRESHOLD = 80;
+const chatMinBtn = document.getElementById('chatMinBtn');
+const chatUnreadBadge = document.getElementById('chatUnreadBadge');
+let unreadCount = 0;
 
 const postToggle = document.getElementById('postToggle');
 let postVideoEnabled = postToggle ? postToggle.checked : true;
@@ -188,6 +191,8 @@ function addChatMessage(data) {
   }
   chatWindow.appendChild(p);
   chatWindow.scrollTop = chatWindow.scrollHeight;
+
+  handleUnreadBump();
 }
 
 function updateLeaderboard(players, stats, myId) {
@@ -291,6 +296,29 @@ potButton.addEventListener('click', () => {
     sounds.chips();
   }
 });
+
+if (chatMinBtn) {
+  chatMinBtn.addEventListener('click', () => {
+    chatContainer.classList.toggle('minimized');
+    if (!chatContainer.classList.contains('minimized')) {
+      // reset unread when restored
+      unreadCount = 0;
+      if (chatUnreadBadge) {
+        chatUnreadBadge.textContent = '0';
+        chatUnreadBadge.hidden = true;
+      }
+    }
+  });
+}
+
+// When a new chat message arrives, bump unread if minimized
+function handleUnreadBump() {
+  if (chatContainer.classList.contains('minimized') && chatUnreadBadge) {
+    unreadCount += 1;
+    chatUnreadBadge.textContent = String(unreadCount);
+    chatUnreadBadge.hidden = false;
+  }
+}
 
 // --- Keyboard Shortcuts (Desktop Only) ---
 document.addEventListener('keydown', (e) => {

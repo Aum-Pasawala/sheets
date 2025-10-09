@@ -182,6 +182,11 @@
     </div>
 
     <div id="chat-container" class="chat-container" style="display: none;">
+        <div class="chat-header">
+            <span class="chat-title">Chat</span>
+            <span class="chat-unread-badge" id="chatUnreadBadge" hidden>0</span>
+            <button id="chatMinBtn" class="chat-min-btn" aria-label="Minimize chat">—</button>
+        </div>
         <div id="chat-window" class="chat-window"></div>
         <div class="chat-input-area">
             <input type="text" id="chat-input" placeholder="Type a message...">
