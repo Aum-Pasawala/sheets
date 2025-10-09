@@ -292,8 +292,11 @@ potButton.addEventListener('click', () => {
   }
 });
 
-// --- Keyboard Shortcuts ---
+// --- Keyboard Shortcuts (Desktop Only) ---
 document.addEventListener('keydown', (e) => {
+  // Skip on mobile devices
+  if ('ontouchstart' in window || navigator.maxTouchPoints > 0) return;
+  
   const active = e.target || document.activeElement;
   const typing = active && (active.tagName === 'TEXTAREA' ||
     (active.tagName === 'INPUT' && (active.type === 'text' || active.id === 'chat-input')));
@@ -324,7 +327,27 @@ sixSevenBtn.addEventListener('click', () => {
 potRebuildInput.addEventListener('change', () => { 
   socket.emit('setPotRebuild', parseFloat(potRebuildInput.value)); 
 });
+// --- Touch Support for Mobile ---
+function addTouchSupport(button) {
+  if (!button) return;
+  
+  button.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    button.click();
+  }, { passive: false });
+}
 
+// Apply touch support to all buttons
+[betButton, passButton, potButton, creditButton, startGameBtn, 
+ aceLowBtn, aceHighBtn, addCreditBtn, cancelCreditBtn, 
+ joinGameBtn, sixSevenBtn, chatSendBtn, getStartedBtn].forEach(addTouchSupport);
+
+// Prevent double-tap zoom on buttons
+document.querySelectorAll('button').forEach(btn => {
+  btn.addEventListener('touchend', (e) => {
+    e.preventDefault();
+  }, { passive: false });
+});
 // --- Audio Toggles ---
 sfxToggle.addEventListener('change', (e) => {
   sfxEnabled = e.target.checked;
@@ -609,3 +632,4 @@ socket.on('playerBetPlaced', (data) => {
     setTimeout(() => betElem.remove(), 500);
   }, 2500);
 });
+

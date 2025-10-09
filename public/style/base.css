@@ -207,3 +207,71 @@ body.screen-shake {
   border: 2px solid #3498db;
   margin-right: 8px;
 }
+@media screen and (max-width: 768px) {
+  .home-page {
+    padding: 20px 10px;
+  }
+
+  .home-hero {
+    padding: 30px 15px;
+  }
+
+  .cards-image {
+    font-size: 80px;
+  }
+
+  .home-hero h1 {
+    font-size: 42px;
+  }
+
+  .tagline {
+    font-size: 16px;
+  }
+
+  .challenge {
+    font-size: 18px;
+  }
+
+  .get-started-btn {
+    padding: 15px 40px;
+    font-size: 22px;
+  }
+
+  .rules-section {
+    padding: 30px 20px;
+  }
+
+  .rules-section h2 {
+    font-size: 32px;
+  }
+
+  .rules-intro {
+    font-size: 16px;
+  }
+
+  .rules-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .rule-card {
+    padding: 20px;
+  }
+
+  .rule-card h3 {
+    font-size: 22px;
+  }
+
+  .rule-card li {
+    font-size: 14px;
+  }
+
+  .keyboard-shortcuts h3 {
+    font-size: 24px;
+  }
+
+  .shortcuts-grid {
+    flex-direction: column;
+    gap: 15px;
+  }
+}

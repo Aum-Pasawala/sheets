@@ -290,3 +290,108 @@
   transform: translateX(-50%) scale(1.1);
   text-shadow: 0 0 15px rgba(255, 204, 0, 0.8);
 }
+
+/* Mobile Responsive Design */
+@media screen and (max-width: 768px) {
+  .game-table {
+    width: 95vw;
+    height: 85vh;
+    border-width: 15px;
+    border-radius: 200px;
+    padding: 20px;
+  }
+
+  .dealer-area {
+    gap: 20px;
+    margin-top: 40px;
+    transform: scale(0.75);
+  }
+
+  .card {
+    width: 100px;
+    height: 150px;
+  }
+
+  .card-front span {
+    font-size: 20px;
+  }
+
+  .card-front .top {
+    top: 8px;
+    left: 8px;
+  }
+
+  .card-front .bottom {
+    bottom: 8px;
+    right: 8px;
+  }
+
+  .center-pot {
+    margin-top: 15px;
+  }
+
+  .pot-label {
+    font-size: 14px;
+  }
+
+  .pot-amount {
+    font-size: 28px;
+  }
+
+  .message-area {
+    top: auto;
+    bottom: 120px;
+    font-size: 14px;
+    max-width: 80%;
+  }
+
+  .message-area.emphasis {
+    font-size: 20px;
+  }
+
+  /* Reposition player seats for mobile */
+  .player-seat {
+    font-size: 12px;
+    padding: 8px 10px;
+    min-width: 90px;
+  }
+
+  .player-name {
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+
+  .player-chips {
+    font-size: 12px;
+  }
+
+  .player-pos-1 {
+    bottom: -60px;
+    left: 50%;
+  }
+
+  .player-pos-2 {
+    bottom: 20px;
+    left: -120px;
+  }
+
+  .player-pos-3 {
+    top: 150px;
+    left: -130px;
+  }
+
+  .player-pos-4 {
+    top: -60px;
+    left: 50%;
+  }
+
+  .player-pos-5 {
+    top: 150px;
+    right: -130px;
+  }
+
+  .player-pos-6 {
+    bottom: 20px;
+    right: -120px;
+  }
+}
