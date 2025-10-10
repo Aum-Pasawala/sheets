@@ -342,9 +342,11 @@ io.on('connection', (socket) => {
         const disconnectedPlayerIndex = playerOrder.indexOf(socket.id);
         const playerName = players[socket.id].name;
 
-        // Remove from game first
-        delete players[socket.id];
-        delete playerStats[socket.id];
+        // ✅ Keep player data and stats for leaderboard, just remove from active game
+        // Mark player as disconnected but keep their data
+        players[socket.id].disconnected = true;
+        
+        // Remove from active player order only
         playerOrder = playerOrder.filter(id => id !== socket.id);
 
         broadcastSystemMessage(`${playerName} has left the game.`);
@@ -356,6 +358,13 @@ io.on('connection', (socket) => {
             broadcastGameState(); // ✅ Immediately notify all clients
         } else if (playerOrder.length === 0) {
             gameAdminId = null;
+            // ✅ Only clear data when ALL players leave
+            players = {};
+            playerStats = {};
+            pot = 0;
+            currentCards = [];
+            currentPlayerIndex = -1;
+            isGameRunning = false;
         }
 
         // ✅ Handle game state conditions correctly
@@ -370,12 +379,6 @@ io.on('connection', (socket) => {
             } else if (disconnectedPlayerIndex === currentPlayerIndex && currentPlayerIndex === playerOrder.length) {
                 currentPlayerIndex = -1;
             }
-        } else if (playerOrder.length === 0) {
-            pot = 0;
-            currentCards = [];
-            currentPlayerIndex = -1;
-            isGameRunning = false;
-            gameAdminId = null;
         }
 
             broadcastGameState();
