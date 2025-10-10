@@ -165,12 +165,12 @@
   transform: translateX(-50%);
 }
 .player-pos-2 {
-  bottom: 40px;
-  left: -160px;
+  bottom: -40px;
+  left: 20px;
 }
 .player-pos-3 {
-  top: 200px;
-  left: -180px;
+  top: 280px;
+  left: -160px;
 }
 .player-pos-4 {
   top: -80px;
@@ -178,52 +178,48 @@
   transform: translateX(-50%);
 }
 .player-pos-5 {
-  top: 200px;
-  right: -180px;
+  top: 280px;
+  right: -160px;
 }
 .player-pos-6 {
   bottom: 40px;
-  right: -160px;
+  right: -80px;
 }
 .player-pos-7 {
   top: -30px;
-  left: -60px;
+  left: -20px;
 }
 .player-pos-8 {
-  top: 450px;
-  left: -100px;
+  top: 400px;
+  left: -120px;
 }
 .player-pos-9 {
-  top: 600px;     
-  left: -50px;      
-  transform: none;   
+  bottom: 40px;     
+  left: -80px;       
 }
 .player-pos-10 {
-  top: 600px;
-  right: -50px;
+  bottom: -40px;
+  right: 20px;
 }
 .player-pos-11 {
   top: -30px;
-  right: -60px;
+  right: -20px;
 }
 .player-pos-12 {
-  bottom: 200px;     
-  right: -180px;     
-  left: auto;        
-  transform: none;   
+  top: 400px;     
+  right: -120px;       
 }
 .player-pos-13 {
-  top: 100px;        
-  left: -220px;
+  top: 150px;        
+  left: -120px;
 }
 .player-pos-14 {
-  top: 100px;       
-  right: -220px;
+  top: 50px;       
+  right: -90px;
 }
 .player-pos-15 {
-  top: 100px;      
-  right: -220px;    
-  transform: none;
+  top: 150px;      
+  right: -120px;    
 }
 
 .player-name {
