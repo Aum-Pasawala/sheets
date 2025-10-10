@@ -186,43 +186,43 @@
   right: -160px;
 }
 .player-pos-7 {
-  bottom: 300px;
-  left: -200px;
+  top: -30px;
+  left: -60px;
 }
 .player-pos-8 {
   top: 450px;
-  left: -200px;
+  left: -100px;
 }
 .player-pos-9 {
-  top: 520px;        /* a little below pos-8’s band */
-  left: -180px;      /* same left-side offset style as 7/8 */
-  transform: none;   /* was translateX(-50%); remove it */
+  top: 600px;     
+  left: -50px;      
+  transform: none;   
 }
 .player-pos-10 {
-  top: 450px;
-  right: -200px;
+  top: 600px;
+  right: -50px;
 }
 .player-pos-11 {
-  bottom: 300px;
-  right: -200px;
+  top: -30px;
+  right: -60px;
 }
 .player-pos-12 {
-  bottom: 200px;     /* keep the band but push to right rim */
-  right: -180px;     /* mirror of left rim seats (e.g., 7/11) */
-  left: auto;        /* override the old center rule */
-  transform: none;   /* was translateX(-50%); remove it */
+  bottom: 200px;     
+  right: -180px;     
+  left: auto;        
+  transform: none;   
 }
 .player-pos-13 {
-  top: 100px;        /* left side mid-upper */
+  top: 100px;        
   left: -220px;
 }
 .player-pos-14 {
-  top: 100px;        /* right side mid-upper */
+  top: 100px;       
   right: -220px;
 }
 .player-pos-15 {
-  top: 100px;        /* near the upper band, symmetric with 13 */
-  right: -220px;     /* a touch farther out than 10/11 for spacing */
+  top: 100px;      
+  right: -220px;    
   transform: none;
 }
 
