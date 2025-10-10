@@ -222,6 +222,17 @@ io.on('connection', (socket) => {
             return;
         }
 
+        if (playerOrder.length >= 15) {
+            waitingPlayers[socket.id] = { 
+            playerData: { id: socket.id, name: data.name, chips: data.buyIn, totalBuyIn: data.buyIn }
+            };
+            socket.emit('message', { text: 'Table is full (15 players). You are spectating and will auto-join when a seat opens.' });
+            broadcastSystemMessage(`${data.name} is spectating (table full) and will auto-join when a seat opens.`);
+            // Still broadcast state so spectators see the table update
+            broadcastGameState();
+            return;
+        }
+
         if (playerOrder.length === 0) gameAdminId = socket.id;
         
         players[socket.id] = { id: socket.id, name: data.name, chips: data.buyIn, totalBuyIn: data.buyIn };
