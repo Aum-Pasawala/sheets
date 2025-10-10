@@ -40,6 +40,7 @@ const body = document.querySelector('body');
 const postVideo = document.getElementById('postVideo');
 const videoBackdrop = document.getElementById('videoBackdrop');
 const bgMusic = document.getElementById('bgMusic');
+const bigWinSound = document.getElementById('bigWinSound');
 const sfxToggle = document.getElementById('sfxToggle');
 const musicToggle = document.getElementById('musicToggle');
 const BIG_BET_THRESHOLD = 80;
@@ -647,7 +648,19 @@ socket.on('message', (data) => {
   if (data.actorId) {
     if (data.outcome === 'win') {
       playerStreaks[data.actorId] = 0;
-      if (data.actorId === myPlayerId && soundsReady) sounds.chaChing();
+      if (data.actorId === myPlayerId && soundsReady) {
+        if (data.betAmount && data.betAmount >= 60) {
+          // Big win - play the 60win.mp3 file
+          if (bigWinSound && sfxEnabled) {
+            bigWinSound.currentTime = 0;
+            bigWinSound.volume = 0.8;
+            bigWinSound.play().catch(e => console.log('Big win sound error:', e));
+          }
+        } else {
+          // Normal win - play cha-ching sound
+          sounds.chaChing();
+        }
+      }
     } else if (['loss', 'post'].includes(data.outcome)) {
       playerStreaks[data.actorId] = (playerStreaks[data.actorId] || 0) + 1;
       if (data.actorId === myPlayerId && soundsReady) {

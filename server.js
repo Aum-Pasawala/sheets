@@ -68,8 +68,8 @@ function broadcastGameState() {
     });
 }
 
-function broadcastMessage(text, isEmphasis = false, actorId = null, outcome = null) {
-    io.emit('message', { text, isEmphasis, actorId, outcome });
+function broadcastMessage(text, isEmphasis = false, actorId = null, outcome = null, betAmount = null) {
+    io.emit('message', { text, isEmphasis, actorId, outcome, betAmount });
 }
 
 function broadcastSystemMessage(message) {
@@ -304,7 +304,7 @@ io.on('connection', (socket) => {
         io.emit('cardResult', { card: nextCard, isPost, isDramatic, betAmount });
         
         setTimeout(() => {
-            broadcastMessage(messageText, true, player.id, outcome);
+            broadcastMessage(messageText, true, player.id, outcome, betAmount);
             setTimeout(startNewTurn, 1500);
         }, isDramatic ? 1500 : 700);
     });
