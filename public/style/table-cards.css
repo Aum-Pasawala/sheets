@@ -238,7 +238,7 @@
 
 .bet-display {
   position: absolute;
-  top: -45px;
+  top: -60px;
   left: 50%;
   transform: translateX(-50%);
   background: rgba(255, 215, 0, 0.95);
