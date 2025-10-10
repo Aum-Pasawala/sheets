@@ -95,6 +95,18 @@ const sounds = {
     synth.triggerAttackRelease("C6", "16n", now + 0.07);
     synth.triggerAttackRelease("E6", "16n", now + 0.14);
   },
+  slotMachine: () => {
+    if (!sfxEnabled) return;
+    const now = Tone.now();
+    // Spinning sound (rapid ascending notes)
+    for (let i = 0; i < 8; i++) {
+      const note = ["C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5"][i];
+      synth.triggerAttackRelease(note, "32n", now + (i * 0.08), 0.3);
+    }
+    // Winning chime (triumphant chord)
+    synth.triggerAttackRelease(["C5", "E5", "G5"], "4n", now + 0.7, 0.6);
+    synth.triggerAttackRelease(["E5", "G5", "C6"], "2n", now + 0.9, 0.8);
+  },
   chips: () => {
     if (!sfxEnabled) return;
     const now = Tone.now();
@@ -600,7 +612,7 @@ socket.on('message', (data) => {
   if (data.actorId) {
     if (data.outcome === 'win') {
       playerStreaks[data.actorId] = 0;
-      if (data.actorId === myPlayerId && soundsReady) sounds.cash();
+      if (data.actorId === myPlayerId && soundsReady) sounds.slotMachine();
     } else if (['loss', 'post'].includes(data.outcome)) {
       playerStreaks[data.actorId] = (playerStreaks[data.actorId] || 0) + 1;
       if (data.actorId === myPlayerId && soundsReady) {
