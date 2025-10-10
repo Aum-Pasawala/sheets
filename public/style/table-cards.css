@@ -17,13 +17,13 @@
 /* Card Styling */
 .dealer-area {
   display: flex;
-  gap: 40px;
-  margin-top: 80px;
+  gap: 50px;
+  margin-top: 40px;
   perspective: 1000px;
 }
 .card {
-  width: 130px;
-  height: 195px;
+  width: 160px;
+  height: 240px;
   position: relative;
   transform-style: preserve-3d;
   opacity: 0;
@@ -133,7 +133,7 @@
 /* Pot, Player Info, Messages */
 .center-pot {
   text-align: center;
-  margin-top: 30px;
+  margin-top: 60px;
   z-index: 10;
 }
 .pot-label {
@@ -269,7 +269,7 @@
 
 .message-area {
   position: absolute;
-  top: 420px;
+  top: 480px;
   left: 50%;
   transform: translateX(-50%);
   font-size: 18px;
