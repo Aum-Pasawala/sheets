@@ -133,7 +133,7 @@
 /* Pot, Player Info, Messages */
 .center-pot {
   text-align: center;
-  margin-top: 60px;
+  margin-top: 40px;
   z-index: 10;
 }
 .pot-label {
@@ -271,7 +271,7 @@
 
 .message-area {
   position: absolute;
-  top: 480px;
+  top: 440px;
   left: 50%;
   transform: translateX(-50%);
   font-size: 18px;
