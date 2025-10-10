@@ -107,17 +107,15 @@ const sounds = {
     synth.triggerAttackRelease("C6", "16n", now + 0.07);
     synth.triggerAttackRelease("E6", "16n", now + 0.14);
   },
-  slotMachine: () => {
+  chaChing: () => {
     if (!sfxEnabled) return;
     const now = Tone.now();
-    // Spinning sound (rapid ascending notes)
-    for (let i = 0; i < 8; i++) {
-      const note = ["C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5"][i];
-      synth.triggerAttackRelease(note, "32n", now + (i * 0.08), 0.3);
-    }
-    // Winning chime (triumphant chord)
-    synth.triggerAttackRelease(["C5", "E5", "G5"], "4n", now + 0.7, 0.6);
-    synth.triggerAttackRelease(["E5", "G5", "C6"], "2n", now + 0.9, 0.8);
+    // Bell "cha" sound (high sharp note)
+    synth.triggerAttackRelease("E6", "16n", now, 0.8);
+    synth.triggerAttackRelease("C6", "16n", now + 0.02, 0.6);
+    // Register drawer "ching" (lower resonant ring)
+    synth.triggerAttackRelease(["A4", "E5"], "8n", now + 0.15, 0.7);
+    synth.triggerAttackRelease(["A4", "E5"], "4n", now + 0.25, 0.5);
   },
   chips: () => {
     if (!sfxEnabled) return;
@@ -649,7 +647,7 @@ socket.on('message', (data) => {
   if (data.actorId) {
     if (data.outcome === 'win') {
       playerStreaks[data.actorId] = 0;
-      if (data.actorId === myPlayerId && soundsReady) sounds.slotMachine();
+      if (data.actorId === myPlayerId && soundsReady) sounds.chaChing();
     } else if (['loss', 'post'].includes(data.outcome)) {
       playerStreaks[data.actorId] = (playerStreaks[data.actorId] || 0) + 1;
       if (data.actorId === myPlayerId && soundsReady) {
