@@ -26,6 +26,9 @@ const betButton = document.getElementById('betButton');
 const potButton = document.getElementById('potButton');
 const passButton = document.getElementById('passButton');
 const creditButton = document.getElementById('creditButton');
+const allInButton = document.getElementById('allInButton');
+const quarterPotButton = document.getElementById('quarterPotButton');
+const halfPotButton = document.getElementById('halfPotButton');
 const playersArea = document.getElementById('players-area');
 const actionArea = document.getElementById('actionArea');
 const potRebuildInput = document.getElementById('potRebuildInput');
@@ -317,6 +320,38 @@ potButton.addEventListener('click', () => {
   }
 });
 
+allInButton.addEventListener('click', () => {
+  if (!canBet) return;
+  const player = players[myPlayerId];
+  if (player && player.chips > 0) {
+    canBet = false;
+    socket.emit('playerBet', player.chips);
+    sounds.chips();
+  }
+});
+
+quarterPotButton.addEventListener('click', () => {
+  if (!canBet || currentPotValue <= 0) return;
+  const amt = currentPotValue * 0.25;
+  const player = players[myPlayerId];
+  if (amt > 0 && player && amt <= player.chips) {
+    canBet = false;
+    socket.emit('playerBet', parseFloat(amt.toFixed(2)));
+    sounds.chips();
+  }
+});
+
+halfPotButton.addEventListener('click', () => {
+  if (!canBet || currentPotValue <= 0) return;
+  const amt = currentPotValue * 0.5;
+  const player = players[myPlayerId];
+  if (amt > 0 && player && amt <= player.chips) {
+    canBet = false;
+    socket.emit('playerBet', parseFloat(amt.toFixed(2)));
+    sounds.chips();
+  }
+});
+
 if (chatMinBtn) {
   chatMinBtn.addEventListener('click', () => {
     chatContainer.classList.toggle('minimized');
@@ -386,9 +421,10 @@ function addTouchSupport(button) {
 }
 
 // Apply touch support to all buttons
-[betButton, passButton, potButton, creditButton, startGameBtn, 
- aceLowBtn, aceHighBtn, addCreditBtn, cancelCreditBtn, 
- joinGameBtn, sixSevenBtn, chatSendBtn, getStartedBtn].forEach(addTouchSupport);
+[betButton, passButton, potButton, allInButton, quarterPotButton, halfPotButton,
+ creditButton, startGameBtn, aceLowBtn, aceHighBtn,
+ addCreditBtn, cancelCreditBtn, joinGameBtn,
+ sixSevenBtn, chatSendBtn, getStartedBtn].forEach(addTouchSupport);
 
 // Prevent double-tap zoom on buttons
 document.querySelectorAll('button').forEach(btn => {
