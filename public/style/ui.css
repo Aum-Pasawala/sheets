@@ -265,6 +265,36 @@ button kbd {
   font-size: 24px;
   background-color: #27ae60;
 }
+.pot-dropdown { position: relative; display: inline-block; }
+
+.dropdown-btn { background: #2980b9; }
+
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  bottom: 110%;
+  left: 0;
+  background: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 8px;
+  min-width: 140px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+  z-index: 2000;
+}
+
+.dropdown-item {
+  display: block;
+  padding: 8px 12px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+.dropdown-item:hover { background: #3e3e3e; }
+
+.pot-dropdown.open .dropdown-menu { display: block; }
 
 /* Chat */
 .chat-container {

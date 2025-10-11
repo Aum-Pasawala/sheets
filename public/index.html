@@ -149,7 +149,14 @@
         <div class="action-area" id="actionArea" style="display: none;">
             <input type="number" id="betInput" step="1.00" placeholder="Enter bet">
             <button id="betButton">Bet <kbd>B</kbd></button>
-            <button id="potButton" class="pot-btn">Pot <kbd>P</kbd></button>
+            <div class="pot-dropdown">
+                <button id="potButton" class="dropdown-btn">Pot ▾</button>
+                <div id="potMenu" class="dropdown-menu">
+                    <button class="dropdown-item" data-ratio="1">Full Pot</button>
+                    <button class="dropdown-item" data-ratio="0.5">½ Pot</button>
+                    <button class="dropdown-item" data-ratio="0.25">¼ Pot</button>
+                </div>
+            </div>
             <button id="passButton">Pass <kbd>Space</kbd></button>
             <button id="creditButton" class="credit-btn">Credit</button>
         </div>

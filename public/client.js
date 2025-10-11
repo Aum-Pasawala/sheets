@@ -24,6 +24,8 @@ const messageElem = document.getElementById('message');
 const betInput = document.getElementById('betInput');
 const betButton = document.getElementById('betButton');
 const potButton = document.getElementById('potButton');
+const potMenu = document.getElementById('potMenu');
+const dropdownItems = potMenu.querySelectorAll('.dropdown-item');
 const passButton = document.getElementById('passButton');
 const creditButton = document.getElementById('creditButton');
 const playersArea = document.getElementById('players-area');
@@ -301,20 +303,40 @@ passButton.addEventListener('click', () => {
   sounds.click();
 });
 
-potButton.addEventListener('click', () => {
-  if (!canBet) return;
-  const player = players[myPlayerId];
+// potButton.addEventListener('click', () => {
+//   if (!canBet) return;
+//   const player = players[myPlayerId];
   
-  if (currentPotValue > 0) {
-    if (player && currentPotValue > player.chips) {
-      alert(`Insufficient funds to bet the pot!\n\nPot: $${currentPotValue.toFixed(2)}\nYour chips: $${player.chips.toFixed(2)}\n\nPlease:\n• Add more credit, or\n• Bet a smaller amount`);
-      return;
-    }
+//   if (currentPotValue > 0) {
+//     if (player && currentPotValue > player.chips) {
+//       alert(`Insufficient funds to bet the pot!\n\nPot: $${currentPotValue.toFixed(2)}\nYour chips: $${player.chips.toFixed(2)}\n\nPlease:\n• Add more credit, or\n• Bet a smaller amount`);
+//       return;
+//     }
     
-    canBet = false;
-    socket.emit('playerBet', currentPotValue);
-    sounds.chips();
-  }
+//     canBet = false;
+//     socket.emit('playerBet', currentPotValue);
+//     sounds.chips();
+//   }
+// });
+
+potButton.addEventListener('click', (e) => {
+  e.stopPropagation();
+  potButton.parentElement.classList.toggle('open'); // open/close dropdown
+});
+
+potMenu.querySelectorAll('.dropdown-item').forEach(item => {
+  item.addEventListener('click', () => {
+    const ratio = parseFloat(item.dataset.ratio);
+    const amount = Math.floor((currentPotValue || 0) * ratio); // use currentPotValue from gameState
+    betInput.value = String(amount); // ✅ fill the input, do NOT auto-bet
+    potButton.parentElement.classList.remove('open');
+  });
+});
+
+// Close the dropdown when clicking anywhere else
+document.addEventListener('click', () => {
+  const wrap = potButton.parentElement;
+  if (wrap && wrap.classList.contains('open')) wrap.classList.remove('open');
 });
 
 if (chatMinBtn) {
