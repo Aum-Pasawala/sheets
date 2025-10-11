@@ -303,24 +303,9 @@ passButton.addEventListener('click', () => {
   sounds.click();
 });
 
-// potButton.addEventListener('click', () => {
-//   if (!canBet) return;
-//   const player = players[myPlayerId];
-  
-//   if (currentPotValue > 0) {
-//     if (player && currentPotValue > player.chips) {
-//       alert(`Insufficient funds to bet the pot!\n\nPot: $${currentPotValue.toFixed(2)}\nYour chips: $${player.chips.toFixed(2)}\n\nPlease:\n• Add more credit, or\n• Bet a smaller amount`);
-//       return;
-//     }
-    
-//     canBet = false;
-//     socket.emit('playerBet', currentPotValue);
-//     sounds.chips();
-//   }
-// });
-
 potButton.addEventListener('click', (e) => {
   e.stopPropagation();
+  updatePotMenuLabels();
   potButton.parentElement.classList.toggle('open'); // open/close dropdown
 });
 
@@ -360,6 +345,26 @@ function handleUnreadBump() {
     chatUnreadBadge.textContent = String(unreadCount);
     chatUnreadBadge.hidden = false;
   }
+}
+
+function dollars(n) {
+  // guard + 2-decimals formatting
+  const num = Number.isFinite(n) ? n : 0;
+  return `$${num.toFixed(2)}`;
+}
+
+function updatePotMenuLabels() {
+  const pot = Number(currentPotValue || 0);
+  const menu = document.getElementById('potMenu');
+  if (!menu) return;
+
+  const full   = menu.querySelector('[data-ratio="1"]');
+  const half   = menu.querySelector('[data-ratio="0.5"]');
+  const quarter= menu.querySelector('[data-ratio="0.25"]');
+
+  if (full)   full.textContent    = `Full Pot — ${dollars(pot)}`;
+  if (half)   half.textContent    = `½ Pot — ${dollars(pot * 0.5)}`;
+  if (quarter)quarter.textContent = `¼ Pot — ${dollars(pot * 0.25)}`;
 }
 
 // --- Keyboard Shortcuts (Desktop Only) ---
@@ -462,6 +467,7 @@ socket.on('connect', () => {
 
 socket.on('gameState', (state) => {
   currentPotValue = state.pot;
+  updatePotMenuLabels();
   potAmountElem.textContent = `$${state.pot.toFixed(2)}`;
   potRebuildInput.disabled = (state.gameAdminId !== myPlayerId);
   potRebuildInput.value = state.potRebuildAmount.toFixed(2);
