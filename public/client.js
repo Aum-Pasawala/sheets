@@ -53,6 +53,7 @@ let unreadCount = 0;
 // --- Admin Add-to-Pot controls ---
 const manualPotInput = document.getElementById('manualPotInput');
 const addPotBtn = document.getElementById('addPotBtn');
+const endGameBtn = document.getElementById('endGameBtn');
 
 const postToggle = document.getElementById('postToggle');
 let postVideoEnabled = postToggle ? postToggle.checked : true;
@@ -505,6 +506,14 @@ socket.on('gameState', (state) => {
     if (el) el.style.display = isAdmin ? 'inline-block' : 'none';
   });
   potRebuildInput.value = state.potRebuildAmount.toFixed(2);
+  if (endGameBtn) {
+    endGameBtn.style.display = (isAdmin && state.pot > 0 && state.isGameRunning) ? 'inline-block' : 'none';
+  }
+  if (endGameBtn) {
+  endGameBtn.addEventListener('click', () => {
+    socket.emit('endGameSplit');
+  });
+}
 
   startGameBtn.style.display =
     (state.gameAdminId === myPlayerId && !state.isGameRunning && state.playerOrder.length >= 3)

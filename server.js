@@ -450,6 +450,37 @@ io.on('connection', (socket) => {
         }
         }
     });
+    socket.on('endGameSplit', () => {
+        // Admin only, must be running, must have players, must have pot
+        if (socket.id !== gameAdminId) return;
+        if (!isGameRunning || playerOrder.length === 0 || pot <= 0) return;
+
+        // Split pot evenly in cents to avoid float drift and distribute remainder fairly
+        const cents = Math.round(pot * 100);
+        const n = playerOrder.length;
+        const share = Math.floor(cents / n);
+        let remainder = cents % n;
+
+        playerOrder.forEach((pid) => {
+            if (!players[pid]) return;
+            let add = share;
+            if (remainder > 0) { add += 1; remainder -= 1; }
+            players[pid].chips += add / 100;
+        });
+
+        broadcastSystemMessage(`Admin ended the game. Pot split evenly among ${n} player(s).`);
+
+        // Reset pot and end the round
+        pot = 0;
+        isGameRunning = false;
+        currentCards = [];
+        currentPlayerIndex = -1;
+
+        // If you have any per-round flags, clear them here too:
+        isWaitingForAceChoice = false;
+
+        broadcastGameState();
+        });
 });
 
 const PORT = process.env.PORT || 3000;
