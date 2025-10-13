@@ -183,6 +183,39 @@ button kbd {
   border-color: #777;
 }
 
+/* --- Add-to-Pot Controls (Admin Only) --- */
+#manualPotInput,
+#addPotBtn,
+label[for="manualPotInput"] {
+  display: none; /* hidden for non-admins */
+}
+
+.add-pot-btn {
+  background-color: #8e44ad;
+  color: white;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.add-pot-btn:hover {
+  background-color: #9b59b6;
+  transform: scale(1.05);
+}
+
+#manualPotInput {
+  width: 80px;
+  background: #333;
+  color: #fff;
+  border: 1px solid #555;
+  padding: 6px;
+  font-size: 15px;
+  border-radius: 6px;
+}
+
 .audio-controls {
   display: flex;
   gap: 12px;

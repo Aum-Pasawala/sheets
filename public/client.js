@@ -49,6 +49,9 @@ const BIG_BET_THRESHOLD = 80;
 const chatMinBtn = document.getElementById('chatMinBtn');
 const chatUnreadBadge = document.getElementById('chatUnreadBadge');
 let unreadCount = 0;
+// --- Admin Add-to-Pot controls ---
+const manualPotInput = document.getElementById('manualPotInput');
+const addPotBtn = document.getElementById('addPotBtn');
 
 const postToggle = document.getElementById('postToggle');
 let postVideoEnabled = postToggle ? postToggle.checked : true;
@@ -402,6 +405,19 @@ sixSevenBtn.addEventListener('click', () => {
 potRebuildInput.addEventListener('change', () => { 
   socket.emit('setPotRebuild', parseFloat(potRebuildInput.value)); 
 });
+
+// --- Admin Add-to-Pot click handler ---
+if (addPotBtn) {
+  addPotBtn.addEventListener('click', () => {
+    const amount = parseFloat(manualPotInput.value);
+    if (isNaN(amount) || amount <= 0) {
+      alert('Enter a valid positive amount to add to the pot.');
+      return;
+    }
+    socket.emit('adminAddToPot', amount);
+    manualPotInput.value = '';
+  });
+}
 // --- Touch Support for Mobile ---
 function addTouchSupport(button) {
   if (!button) return;
@@ -470,6 +486,16 @@ socket.on('gameState', (state) => {
   updatePotMenuLabels();
   potAmountElem.textContent = `$${state.pot.toFixed(2)}`;
   potRebuildInput.disabled = (state.gameAdminId !== myPlayerId);
+  // ✅ Show Add-to-Pot controls only for admin
+const isAdmin = (state.gameAdminId === myPlayerId);
+const manualPotControls = [
+  manualPotInput,
+  addPotBtn,
+  document.querySelector('label[for="manualPotInput"]')
+];
+manualPotControls.forEach(el => {
+  if (el) el.style.display = isAdmin ? 'inline-block' : 'none';
+});
   potRebuildInput.value = state.potRebuildAmount.toFixed(2);
 
   startGameBtn.style.display =
