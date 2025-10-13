@@ -24,10 +24,11 @@ const messageElem = document.getElementById('message');
 const betInput = document.getElementById('betInput');
 const betButton = document.getElementById('betButton');
 const potButton = document.getElementById('potButton');
-const potMenu = document.getElementById('potMenu');
-const dropdownItems = potMenu.querySelectorAll('.dropdown-item');
 const passButton = document.getElementById('passButton');
 const creditButton = document.getElementById('creditButton');
+const allInButton = document.getElementById('allInButton');
+const quarterPotButton = document.getElementById('quarterPotButton');
+const halfPotButton = document.getElementById('halfPotButton');
 const playersArea = document.getElementById('players-area');
 const actionArea = document.getElementById('actionArea');
 const potRebuildInput = document.getElementById('potRebuildInput');
@@ -306,25 +307,52 @@ passButton.addEventListener('click', () => {
   sounds.click();
 });
 
-potButton.addEventListener('click', (e) => {
-  e.stopPropagation();
-  updatePotMenuLabels();
-  potButton.parentElement.classList.toggle('open'); // open/close dropdown
+potButton.addEventListener('click', () => {
+  if (!canBet) return;
+  const player = players[myPlayerId];
+  
+  if (currentPotValue > 0) {
+    if (player && currentPotValue > player.chips) {
+      alert(`Insufficient funds to bet the pot!\n\nPot: $${currentPotValue.toFixed(2)}\nYour chips: $${player.chips.toFixed(2)}\n\nPlease:\n• Add more credit, or\n• Bet a smaller amount`);
+      return;
+    }
+    
+    canBet = false;
+    socket.emit('playerBet', currentPotValue);
+    sounds.chips();
+  }
 });
 
-potMenu.querySelectorAll('.dropdown-item').forEach(item => {
-  item.addEventListener('click', () => {
-    const ratio = parseFloat(item.dataset.ratio);
-    const amount = Math.floor((currentPotValue || 0) * ratio); // use currentPotValue from gameState
-    betInput.value = String(amount); // ✅ fill the input, do NOT auto-bet
-    potButton.parentElement.classList.remove('open');
-  });
+allInButton.addEventListener('click', () => {
+  if (!canBet) return;
+  const player = players[myPlayerId];
+  if (player && player.chips > 0) {
+    canBet = false;
+    socket.emit('playerBet', player.chips);
+    sounds.chips();
+  }
 });
 
-// Close the dropdown when clicking anywhere else
-document.addEventListener('click', () => {
-  const wrap = potButton.parentElement;
-  if (wrap && wrap.classList.contains('open')) wrap.classList.remove('open');
+quarterPotButton.addEventListener('click', () => {
+  if (!canBet || currentPotValue <= 0) return;
+  const amt = currentPotValue * 0.25;
+  const player = players[myPlayerId];
+  if (amt > 0 && player && amt <= player.chips) {
+    canBet = false;
+    socket.emit('playerBet', parseFloat(amt.toFixed(2)));
+    sounds.chips();
+  }
+});
+
+halfPotButton.addEventListener('click', () => {
+  if (!canBet || currentPotValue <= 0) return;
+  const amt = currentPotValue * 0.5;
+  const player = players[myPlayerId];
+  if (amt > 0 && player && amt <= player.chips) {
+    canBet = false;
+    socket.emit('playerBet', parseFloat(amt.toFixed(2)));
+    sounds.chips();
+  }
 });
 
 if (chatMinBtn) {
@@ -348,26 +376,6 @@ function handleUnreadBump() {
     chatUnreadBadge.textContent = String(unreadCount);
     chatUnreadBadge.hidden = false;
   }
-}
-
-function dollars(n) {
-  // guard + 2-decimals formatting
-  const num = Number.isFinite(n) ? n : 0;
-  return `$${num.toFixed(2)}`;
-}
-
-function updatePotMenuLabels() {
-  const pot = Number(currentPotValue || 0);
-  const menu = document.getElementById('potMenu');
-  if (!menu) return;
-
-  const full   = menu.querySelector('[data-ratio="1"]');
-  const half   = menu.querySelector('[data-ratio="0.5"]');
-  const quarter= menu.querySelector('[data-ratio="0.25"]');
-
-  if (full)   full.textContent    = `Full Pot — ${dollars(pot)}`;
-  if (half)   half.textContent    = `½ Pot — ${dollars(pot * 0.5)}`;
-  if (quarter)quarter.textContent = `¼ Pot — ${dollars(pot * 0.25)}`;
 }
 
 // --- Keyboard Shortcuts (Desktop Only) ---
@@ -429,9 +437,10 @@ function addTouchSupport(button) {
 }
 
 // Apply touch support to all buttons
-[betButton, passButton, potButton, creditButton, startGameBtn, 
- aceLowBtn, aceHighBtn, addCreditBtn, cancelCreditBtn, 
- joinGameBtn, sixSevenBtn, chatSendBtn, getStartedBtn].forEach(addTouchSupport);
+[betButton, passButton, potButton, allInButton, quarterPotButton, halfPotButton,
+ creditButton, startGameBtn, aceLowBtn, aceHighBtn,
+ addCreditBtn, cancelCreditBtn, joinGameBtn,
+ sixSevenBtn, chatSendBtn, getStartedBtn].forEach(addTouchSupport);
 
 // Prevent double-tap zoom on buttons
 document.querySelectorAll('button').forEach(btn => {
@@ -483,19 +492,18 @@ socket.on('connect', () => {
 
 socket.on('gameState', (state) => {
   currentPotValue = state.pot;
-  updatePotMenuLabels();
   potAmountElem.textContent = `$${state.pot.toFixed(2)}`;
   potRebuildInput.disabled = (state.gameAdminId !== myPlayerId);
   // ✅ Show Add-to-Pot controls only for admin
-const isAdmin = (state.gameAdminId === myPlayerId);
-const manualPotControls = [
-  manualPotInput,
-  addPotBtn,
-  document.querySelector('label[for="manualPotInput"]')
-];
-manualPotControls.forEach(el => {
-  if (el) el.style.display = isAdmin ? 'inline-block' : 'none';
-});
+  const isAdmin = (state.gameAdminId === myPlayerId);
+  const manualPotControls = [
+    manualPotInput,
+    addPotBtn,
+    document.querySelector('label[for="manualPotInput"]')
+  ];
+  manualPotControls.forEach(el => {
+    if (el) el.style.display = isAdmin ? 'inline-block' : 'none';
+  });
   potRebuildInput.value = state.potRebuildAmount.toFixed(2);
 
   startGameBtn.style.display =
@@ -746,4 +754,3 @@ socket.on('playerBetPlaced', (data) => {
     setTimeout(() => betElem.remove(), 500);
   }, 2500);
 });
-

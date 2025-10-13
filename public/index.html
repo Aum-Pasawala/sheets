@@ -147,54 +147,54 @@
         <div class="message-area" id="message">Connecting...</div>
     
         <div class="action-area" id="actionArea" style="display: none;">
-            <input type="number" id="betInput" step="1.00" placeholder="Enter bet">
+            <input type="number" id="betInput" step="0.01" placeholder="Enter bet">
             <button id="betButton">Bet <kbd>B</kbd></button>
-            <div class="pot-dropdown">
-                <button id="potButton" class="dropdown-btn">Pot ▾</button>
-                <div id="potMenu" class="dropdown-menu">
-                    <button class="dropdown-item" data-ratio="1">Full Pot</button>
-                    <button class="dropdown-item" data-ratio="0.5">½ Pot</button>
-                    <button class="dropdown-item" data-ratio="0.25">¼ Pot</button>
-                </div>
+            <div class="pot-group">
+                <button id="allInButton" class="allin-btn">All In</button>
+                <button id="potButton" class="pot-btn">Pot <kbd>P</kbd></button>
+            <div class="fraction-group">
+                <button id="quarterPotButton" class="fraction-btn">¼ Pot</button>
+                <button id="halfPotButton" class="fraction-btn">½ Pot</button>
+            </div>
             </div>
             <button id="passButton">Pass <kbd>Space</kbd></button>
             <button id="creditButton" class="credit-btn">Credit</button>
         </div>
 
-       <div class="settings-area">
-    <label for="potRebuildInput">Pot Rebuild:</label>
-    <input type="number" id="potRebuildInput" value="5" step="1.00">
-
-    <label for="manualPotInput">Add to Pot:</label>
-    <input type="number" id="manualPotInput" step="1.00" value="0" min="0">
-    <button id="addPotBtn" class="add-pot-btn">Add</button>
-  
-
-    <!-- Audio Controls -->
-    <div class="audio-controls">
+        <div class="settings-area">
+            <label for="potRebuildInput">Pot Rebuild:</label>
+            <input type="number" id="potRebuildInput" value="5" step="1.00">
             
+            <label for="manualPotInput">Add to Pot:</label>
+            <input type="number" id="manualPotInput" step="1.00" value="0" min="0">
+            <button id="addPotBtn" class="add-pot-btn">Add</button>
+        
+
             <!-- Audio Controls -->
             <div class="audio-controls">
-                <label class="toggle-switch">
-                    <input type="checkbox" id="sfxToggle" checked>
-                    <span class="toggle-slider"></span>
-                    <span class="toggle-label">SFX</span>
-                </label>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="musicToggle">
-                    <span class="toggle-slider"></span>
-                    <span class="toggle-label">Music</span>
-                </label>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="postToggle" checked>
-                    <span class="toggle-slider"></span>
-                    <span class="toggle-label">Post</span>
-                </label>
-            </div>
-        </div>
+                    
+                    <!-- Audio Controls -->
+                    <div class="audio-controls">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="sfxToggle" checked>
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">SFX</span>
+                        </label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="musicToggle">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">Music</span>
+                        </label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="postToggle" checked>
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">Post</span>
+                        </label>
+                    </div>
+                </div>
 
-        <button id="sixSevenBtn" class="six-seven-btn" style="display: none;">6-7!</button>
-    </div>
+                <button id="sixSevenBtn" class="six-seven-btn" style="display: none;">6-7!</button>
+            </div>
 
     <div id="chat-container" class="chat-container" style="display: none;">
         <div class="chat-header">

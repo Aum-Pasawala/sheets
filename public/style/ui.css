@@ -9,11 +9,67 @@
   border-radius: 10px;
   z-index: 60;
 }
+/* --- Pot & Quick Bet Buttons (Aligned + Light Green) --- */
+.pot-group {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px; /* matches general button gap spacing */
+  position: relative;
+}
+
+/* All-In button — light green to match Bet button */
+.allin-btn {
+  background-color: #66cd32; 
+  color: #fff;
+  border: none;
+  height: 48px;
+  padding: 0 18px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.1s, background 0.2s;
+}
+.allin-btn:hover {
+  background-color: #5ee165; 
+  transform: scale(1.05);
+}
+
+/* Pot button — normal */
+.pot-btn {
+  height: 48px;
+  padding: 12px 24px;
+}
+
+/* Fraction buttons stack vertically beside Pot */
+.fraction-group {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 48px; /* match Pot height */
+  gap: 4px;
+}
+
+.fraction-btn {
+  background-color: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 0.8rem;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  height: calc(50% - 2px); /* equal halves */
+  min-width: 54px; /* visually balances with pot button */
+}
+.fraction-btn:hover {
+  background-color: #1565c0;
+  transform: scale(1.05);
+}
 .credit-btn {
-  background-color: #27ae60;
+  background-color: #000000;
 }
 .credit-btn:hover {
-  background-color: #2ecc71;
+  background-color: #222222;
 }
 input[type="number"] {
   width: 110px;
@@ -298,36 +354,6 @@ label[for="manualPotInput"] {
   font-size: 24px;
   background-color: #27ae60;
 }
-.pot-dropdown { position: relative; display: inline-block; }
-
-.dropdown-btn { background: #2980b9; }
-
-.dropdown-menu {
-  display: none;
-  position: absolute;
-  bottom: 110%;
-  left: 0;
-  background: #2a2a2a;
-  border: 1px solid #444;
-  border-radius: 8px;
-  min-width: 140px;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.3);
-  z-index: 2000;
-}
-
-.dropdown-item {
-  display: block;
-  padding: 8px 12px;
-  width: 100%;
-  text-align: left;
-  background: none;
-  color: #fff;
-  border: none;
-  cursor: pointer;
-}
-.dropdown-item:hover { background: #3e3e3e; }
-
-.pot-dropdown.open .dropdown-menu { display: block; }
 
 /* Chat */
 .chat-container {

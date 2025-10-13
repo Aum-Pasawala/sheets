@@ -282,28 +282,28 @@ io.on('connection', (socket) => {
         }
     });
 
-    // --- Admin Add-to-Pot handler ---
-socket.on('adminAddToPot', (amount) => {
-    // ✅ Only the current admin can use this
-    if (socket.id !== gameAdminId) return;
+        // --- Admin Add-to-Pot handler ---
+    socket.on('adminAddToPot', (amount) => {
+        // ✅ Only the current admin can use this
+        if (socket.id !== gameAdminId) return;
 
-    // ✅ Optional safety: only before game starts
-    if (isGameRunning) {
-        socket.emit('message', { text: "You can only add to the pot before the game starts." });
-        return;
-    }
+        // ✅ Optional safety: only before game starts
+        if (isGameRunning) {
+            socket.emit('message', { text: "You can only add to the pot before the game starts." });
+            return;
+        }
 
-    // ✅ Validate input
-    const addAmount = parseFloat(amount);
-    if (isNaN(addAmount) || addAmount <= 0) {
-        socket.emit('message', { text: "Invalid pot amount." });
-        return;
-    }
+        // ✅ Validate input
+        const addAmount = parseFloat(amount);
+        if (isNaN(addAmount) || addAmount <= 0) {
+            socket.emit('message', { text: "Invalid pot amount." });
+            return;
+        }
 
-    pot += addAmount;
-    broadcastSystemMessage(`💰 Admin added $${addAmount.toFixed(2)} to the pot.`);
-    broadcastGameState();
-});
+        pot += addAmount;
+        broadcastSystemMessage(`💰 Admin added $${addAmount.toFixed(2)} to the pot.`);
+        broadcastGameState();
+    });
 
     socket.on('playerBet', (betAmount) => {
         const player = players[socket.id];
