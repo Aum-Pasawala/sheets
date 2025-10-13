@@ -376,46 +376,78 @@ io.on('connection', (socket) => {
         const disconnectedPlayerIndex = playerOrder.indexOf(socket.id);
         const playerName = players[socket.id].name;
 
-        // ✅ Keep player data and stats for leaderboard, just remove from active game
-        // Mark player as disconnected but keep their data
+        // Keep player record/stats; mark as disconnected and remove from turn order
         players[socket.id].disconnected = true;
-        
-        // Remove from active player order only
         playerOrder = playerOrder.filter(id => id !== socket.id);
 
         broadcastSystemMessage(`${playerName} has left the game.`);
 
-        // ✅ FIX: Reassign admin safely after removal
+        // Reassign admin safely after removal
         if (wasAdmin && playerOrder.length > 0) {
             gameAdminId = playerOrder[0];
+            if (players[gameAdminId]) {
             broadcastSystemMessage(`${players[gameAdminId].name} is the new game admin.`);
-            broadcastGameState(); // ✅ Immediately notify all clients
+            }
+            broadcastGameState();
         } else if (playerOrder.length === 0) {
+            // Table empty — clear volatile state
             gameAdminId = null;
-            // ✅ Only clear data when ALL players leave
             players = {};
             playerStats = {};
             pot = 0;
             currentCards = [];
             currentPlayerIndex = -1;
             isGameRunning = false;
+            broadcastGameState();
+            return;
         }
 
-        // ✅ Handle game state conditions correctly
-        if (playerOrder.length < MIN_PLAYERS && isGameRunning) {
+        // Turn/index handling
+        const wasTurn = (isGameRunning && disconnectedPlayerIndex === currentPlayerIndex);
+
+        if (isGameRunning) {
+            // Not enough players -> pause
+            if (playerOrder.length < MIN_PLAYERS) {
             isGameRunning = false;
             broadcastMessage('Not enough players. Game paused.');
-        }
-
-        if (playerOrder.length > 0 && isGameRunning) {
-            if (disconnectedPlayerIndex < currentPlayerIndex) {
-                currentPlayerIndex--;
-            } else if (disconnectedPlayerIndex === currentPlayerIndex && currentPlayerIndex === playerOrder.length) {
-                currentPlayerIndex = -1;
-            }
-        }
-
             broadcastGameState();
+            return;
+            }
+
+            // If someone before the current index left, pull index back one
+            if (disconnectedPlayerIndex > -1 && disconnectedPlayerIndex < currentPlayerIndex) {
+            currentPlayerIndex = Math.max(0, currentPlayerIndex - 1);
+            }
+
+            if (wasTurn) {
+            // If we were waiting for their Ace choice, unstick and continue the turn flow
+            if (isWaitingForAceChoice) {
+                isWaitingForAceChoice = false;
+                if (playerOrder.length > 0) {
+                // Continue resolving the current turn
+                dealSecondCard();
+                } else {
+                broadcastGameState();
+                }
+            } else {
+                // startNewTurn() increments the index first, so back up one so
+                // the "next" seat after the leaver gets the turn (no skip)
+                if (playerOrder.length > 0) {
+                currentPlayerIndex = (currentPlayerIndex - 1 + playerOrder.length) % playerOrder.length;
+                setTimeout(startNewTurn, 150);
+                } else {
+                currentPlayerIndex = -1;
+                broadcastGameState();
+                }
+            }
+            } else {
+            // Not their turn — just refresh state
+            broadcastGameState();
+            }
+        } else {
+            // Game not running — just refresh the lobby state
+            broadcastGameState();
+        }
         }
     });
 });
