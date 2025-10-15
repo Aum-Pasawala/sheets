@@ -436,6 +436,8 @@ label[for="manualPotInput"] {
 .chat-container.minimized .chat-window,
 .chat-container.minimized .chat-input-area { display: none; }
 
+
+
 /* ==========================
    Responsive adjustments
    ========================== */
@@ -486,11 +488,10 @@ label[for="manualPotInput"] {
   }
 
   .chat-container {
-    width: 90%;
-    height: 300px;
-    bottom: 10px;
-    right: 5%;
-    left: 5%;
+    display: flex !important;   /* in case an inline style set display:none */
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: 1200;              /* above settings/leaderboard if needed */
   }
 
   .six-seven-btn { padding: 25px 35px; font-size: 36px; }

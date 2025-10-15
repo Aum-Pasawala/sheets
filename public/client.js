@@ -792,6 +792,15 @@ function setLeaderboardVisible(on) {
   if (el) el.style.display = on ? 'block' : 'none';
 }
 
+function showChat() {
+  const chat = document.getElementById('chat-container'); // <-- fix ID
+  if (!chat) return;
+  chat.style.display = 'flex';
+  chat.style.visibility = 'visible';
+  chat.style.opacity = '1';
+  chat.classList.remove('minimized');
+}
+
 function handleJoinedRoomState(state) {
   const home = document.getElementById('homePage');
   const modal = document.getElementById('buyInScreen');
@@ -806,10 +815,12 @@ socket.on('roomCreated', ({ code, state }) => {
   if (roomCodeBanner) { roomCodeText.textContent = code; roomCodeBanner.style.display = 'block'; }
   handleJoinedRoomState(state);
   setLeaderboardVisible(true);
+  showChat();
 });
 socket.on('joinedRoom', ({ code, state }) => {
   myRoomCode = code;
   if (roomCodeBanner) { roomCodeText.textContent = code; roomCodeBanner.style.display = 'block'; }
   handleJoinedRoomState(state);
   setLeaderboardVisible(true);
+  showChat();
 });
