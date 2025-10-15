@@ -59,6 +59,8 @@ let unreadCount = 0;
 const manualPotInput = document.getElementById('manualPotInput');
 const addPotBtn = document.getElementById('addPotBtn');
 const endGameBtn = document.getElementById('endGameBtn');
+const spectateBtn = document.getElementById('spectateBtn');
+const spectatorBanner = document.getElementById('spectatorBanner');
 
 const postToggle = document.getElementById('postToggle');
 let postVideoEnabled = postToggle ? postToggle.checked : true;
@@ -284,6 +286,17 @@ if (joinGameBtn) {
       return;
     }
     socket.emit('joinRoom', { code, name, buyIn });
+  });
+}
+
+if (spectateBtn) {
+  spectateBtn.addEventListener('click', () => {
+    const name  = (document.getElementById('nameInput').value || '').trim(); // optional
+    const buyIn = parseFloat(document.getElementById('buyInInput').value);    // not used for spectators
+    const code  = (document.getElementById('roomCodeInput').value || '').trim().toUpperCase();
+    if (!code) { alert('Enter a room code to spectate.'); return; }
+    // buyIn is ignored for spectators; no validation needed
+    socket.emit('spectateRoom', { code, name });
   });
 }
 
@@ -532,6 +545,12 @@ socket.on('gameState', (state) => {
   });
   const hasPlayers = Array.isArray(state.playerOrder) && state.playerOrder.length > 0;
   setLeaderboardVisible(hasPlayers);
+  const actionArea = document.getElementById('actionArea');
+  const iAmSeated = state.players && state.players[myPlayerId];
+  if (actionArea) actionArea.style.display = iAmSeated ? 'flex' : 'none';
+
+  const leaderboardEl = document.getElementById('leaderboard');
+  if (leaderboardEl) leaderboardEl.style.display = 'block'; // spectators can still view
 }
 
   startGameBtn.style.display =
@@ -823,4 +842,28 @@ socket.on('joinedRoom', ({ code, state }) => {
   handleJoinedRoomState(state);
   setLeaderboardVisible(true);
   showChat();
+});
+socket.on('joinedRoomSpectator', ({ code, state }) => {
+  myRoomCode = code;
+
+  // show room code banner if you have it
+  if (roomCodeBanner) { roomCodeText.textContent = code; roomCodeBanner.style.display = 'block'; }
+
+  // show a “spectating” banner if you added one
+  const spectatorBanner = document.getElementById('spectatorBanner');
+  if (spectatorBanner) spectatorBanner.style.display = 'block';
+
+  // IMPORTANT: show chat for spectators too
+  showChat?.();
+
+  // hide betting controls for spectators
+  const actionArea = document.getElementById('actionArea');
+  if (actionArea) actionArea.style.display = 'none';
+
+  // keep leaderboard visible
+  const leaderboard = document.getElementById('leaderboard');
+  if (leaderboard) leaderboard.style.display = 'block';
+
+  // swap out of the start screen if needed
+  handleJoinedRoomState?.(state);
 });

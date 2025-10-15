@@ -18,6 +18,10 @@
                 font-weight:600; display:none; z-index:1200;">
         Room: <span id="roomCodeText">—</span>
     </div>
+    <div id="spectatorBanner" style="display:none; position:fixed; top:40px; left:50%; transform:translateX(-50%);
+        background:rgba(0,0,0,.6); padding:6px 12px; border-radius:8px; font-weight:600; z-index:1200;">
+        You are spectating
+    </div>
     <!-- Home Page -->
     <div id="homePage" class="home-page">
         <div class="home-content">
@@ -111,6 +115,7 @@
             <div class="button-row">
             <button id="createGameBtn" class="credit-btn">Create Game</button>
             <button id="joinGameBtn" class="join-btn">Join Game</button>
+            <button id="spectateBtn" class="cancel-btn">Spectate</button>
             </div>
         </div>
     </div>

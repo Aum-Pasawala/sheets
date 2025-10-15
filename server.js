@@ -41,6 +41,8 @@ function newRoomState() {
     is67ChallengeActive: false,
     sixSevenPresses: [],     // array of socket ids who pressed
     challengeTimer: null,
+
+    spectators: {}
   };
 }
 
@@ -113,9 +115,11 @@ function serializeState(S) {
     is67ChallengeActive: S.is67ChallengeActive,
     sixSevenPresses: S.sixSevenPresses,
     gameAdminId: S.gameAdminId,
-    currentPlayerId: (S.playerOrder.length > 0 && S.currentPlayerIndex >= 0)
-      ? S.playerOrder[S.currentPlayerIndex]
-      : null,
+    currentPlayerId:
+      (S.playerOrder.length > 0 && S.currentPlayerIndex >= 0)
+        ? S.playerOrder[S.currentPlayerIndex]
+        : null,
+    spectatorsCount: Object.keys(S.spectators || {}).length
   };
 }
 
@@ -556,15 +560,18 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('chatMessage', (msg) => {
-    const ctx = getSocketRoomState(socket);
-    if (!ctx) return;
-    const { code, S } = ctx;
+    socket.on('chatMessage', (msg) => {
+        const ctx = getSocketRoomState(socket);
+        if (!ctx) return;
+        const { code, S } = ctx;
 
-    if (S.players[socket.id]) {
-      io.to(code).emit('newChatMessage', { name: S.players[socket.id].name, message: msg });
-    }
-  });
+        const name =
+            (S.players[socket.id]    && S.players[socket.id].name) ||
+            (S.spectators?.[socket.id] && S.spectators[socket.id].name);
+
+        if (!name) return; // not in the room
+        io.to(code).emit('newChatMessage', { name, message: msg });
+    });
 
   /* ---------- Disconnect handling (auto-advance if current player leaves) ---------- */
   socket.on('disconnect', () => {
@@ -657,12 +664,49 @@ io.on('connection', (socket) => {
         roomBroadcastGameState(io, code);
       }
 
+      if (S.spectators && S.spectators[socket.id]) {
+        const name = S.spectators[socket.id].name;
+        delete S.spectators[socket.id];
+        roomBroadcastSystemMessage(io, code, `${name} stopped spectating.`);
+        // optional: if room becomes totally empty of players & spectators, delete it (you may already do this)
+        if (S.playerOrder.length === 0 && Object.keys(S.players).length === 0 && Object.keys(S.spectators).length === 0) {
+            rooms.delete(code);
+        } else {
+            roomBroadcastGameState(io, code);
+        }
+        return; // done
+    }
+
       // Remove records for the disconnected socket (optional keep stats if you want)
       delete S.players[socket.id];
       delete S.playerStats[socket.id];
       delete S.waitingPlayers[socket.id];
     }
   });
+
+  socket.on('spectateRoom', ({ code, name }) => {
+    code = String(code || '').toUpperCase();
+    if (!rooms.has(code)) {
+        socket.emit('roomError', 'Room code not found.');
+        return;
+    }
+    const S = rooms.get(code);
+    socket.join(code);
+    socket.data.roomCode = code;
+
+    // optional name → fallback to random like players use
+    const existingNames = new Set([
+        ...Object.values(S.players).map(p => p.name),
+        ...Object.values(S.spectators).map(s => s.name)
+    ]);
+    const finalName = (name && name.trim()) ? name.trim() : generatePlayerName(existingNames);
+
+    S.spectators[socket.id] = { id: socket.id, name: finalName };
+
+    roomBroadcastSystemMessage(io, code, `${finalName} is spectating.`);
+    socket.emit('joinedRoomSpectator', { code, state: serializeState(S) });
+    roomBroadcastGameState(io, code);
+    });
 });
 
 /* =========
