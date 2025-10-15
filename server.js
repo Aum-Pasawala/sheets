@@ -33,6 +33,8 @@ function newRoomState() {
     gameAdminId: null,
     isGameRunning: false,
     MIN_PLAYERS: 3,
+    turnSeq: 0,          // increments each turn
+    turnInProgress: false,
 
     // Flow flags
     isWaitingForAceChoice: false,
@@ -141,16 +143,31 @@ function roomBroadcastSystemMessage(io, code, text) {
 
 async function startNewTurnRoom(io, code, S) {
   if (!rooms.has(code)) return;
+
+  // If game can't run, pause and invalidate any pending timeouts
   if (!S.isGameRunning || S.playerOrder.length < S.MIN_PLAYERS) {
     S.isGameRunning = false;
+    // cancel pending async for prior turns
+    if (S.challengeTimer) { clearTimeout(S.challengeTimer); S.challengeTimer = null; }
+    S.is67ChallengeActive = false;
+    S.turnInProgress = false;
+    S.turnSeq++; // invalidate old tasks
     roomBroadcastMessage(io, code, 'Game paused. Waiting for more players...');
     roomBroadcastGameState(io, code);
     return;
   }
 
+  // begin a brand-new turn sequence
+  S.turnSeq++;
+  const seq = S.turnSeq;
+  S.turnInProgress = true;
+
+  const abortIfStale = () =>
+    !rooms.has(code) || !S.isGameRunning || seq !== S.turnSeq || S.playerOrder.length < S.MIN_PLAYERS;
+
   io.to(code).emit('clearResult');
 
-  // Pot rebuild (and move waiting players) when pot is empty/non-positive
+  // Rebuild pot if empty and move in waiting players
   if (S.pot <= 0) {
     let playersInGame = 0;
     S.playerOrder.forEach(pid => {
@@ -162,16 +179,17 @@ async function startNewTurnRoom(io, code, S) {
     });
     roomBroadcastMessage(io, code, `Pot rebuilt! ${playersInGame} players add $${S.potRebuildAmount.toFixed(2)}.`);
 
-    // Move waiting players in
+    // Move waiting players in (charge rebuild on entry)
     if (Object.keys(S.waitingPlayers).length > 0) {
       for (const pid in S.waitingPlayers) {
         const w = S.waitingPlayers[pid];
         S.players[pid] = w.playerData;
         S.playerStats[pid] = { wins: 0, losses: 0, posts: 0 };
         S.playerOrder.push(pid);
-        // charge rebuild upon joining
-        S.players[pid].chips -= S.potRebuildAmount;
-        S.pot += S.potRebuildAmount;
+        if (S.players[pid]) {
+          S.players[pid].chips -= S.potRebuildAmount;
+          S.pot += S.potRebuildAmount;
+        }
         roomBroadcastSystemMessage(io, code, `${S.players[pid].name} has joined the game from the waiting list.`);
       }
       S.waitingPlayers = {};
@@ -184,33 +202,48 @@ async function startNewTurnRoom(io, code, S) {
     roomBroadcastMessage(io, code, "Deck is low, creating a fresh shuffle...");
   }
 
+  // Reset per-turn flags/timers
+  if (S.challengeTimer) { clearTimeout(S.challengeTimer); S.challengeTimer = null; }
+  S.is67ChallengeActive = false;
+  S.sixSevenPresses = [];
+  S.isWaitingForAceChoice = false;
+
+  // Advance seat & announce
   S.currentCards = [];
-  S.currentPlayerIndex = (S.currentPlayerIndex + 1) % S.playerOrder.length;
+  S.currentPlayerIndex = (S.currentPlayerIndex + 1 + S.playerOrder.length) % S.playerOrder.length;
   const currentPlayerId = S.playerOrder[S.currentPlayerIndex];
 
   roomBroadcastGameState(io, code);
   roomBroadcastMessage(io, code, `${S.players[currentPlayerId].name}'s turn.`);
 
-  // First card
+  // First card (guard)
   await new Promise(r => setTimeout(r, 500));
+  if (abortIfStale()) { S.turnInProgress = false; return; }
+
   const card1 = S.deck.pop();
   S.currentCards.push(card1);
   io.to(code).emit('dealCard', { card: card1, cardSlot: 1 });
 
-  // Ace choice prompt
+  // Ace choice flow (guarded via seq)
   if (card1.value === 14) {
     S.isWaitingForAceChoice = true;
     roomBroadcastGameState(io, code);
-    io.to(currentPlayerId).emit('promptAceChoice');
+    io.to(currentPlayerId).emit('promptAceChoice', { seq });
+    // Stay in this turn; resume on aceChoice
     return;
   }
 
-  // Second card (non-Ace first)
+  // Second card (guard)
   await new Promise(r => setTimeout(r, 400));
-  dealSecondCardRoom(io, code, S);
+  if (abortIfStale()) { S.turnInProgress = false; return; }
+
+  dealSecondCardRoom(io, code, S, seq);
 }
 
-async function dealSecondCardRoom(io, code, S) {
+async function dealSecondCardRoom(io, code, S, seq) {
+  const mySeq = (typeof seq === 'number') ? seq : S.turnSeq;
+  if (!rooms.has(code) || !S.isGameRunning || mySeq !== S.turnSeq) return;
+
   // Draw second card
   let card2 = S.deck.pop();
   if (card2.value === 14) card2.rank = 'A (High)';
@@ -218,22 +251,31 @@ async function dealSecondCardRoom(io, code, S) {
   io.to(code).emit('dealCard', { card: card2, cardSlot: 2 });
   S.currentCards.sort((a, b) => a.value - b.value);
 
-  // Placeholder middle slot
+  // Middle placeholder (guarded delay)
   await new Promise(r => setTimeout(r, 300));
+  if (!rooms.has(code) || !S.isGameRunning || mySeq !== S.turnSeq) return;
   io.to(code).emit('dealMiddleCardPlaceholder');
 
-  // Same-card penalty (auto pass)
+  // Same-card penalty -> auto-pass this turn
   if (S.currentCards[0].value === S.currentCards[1].value) {
     const pid = S.playerOrder[S.currentPlayerIndex];
     const penalty = 1.00;
-    S.players[pid].chips -= penalty;
-    S.pot += penalty;
-    roomBroadcastMessage(io, code, `Same cards! ${S.players[pid].name} pays $${penalty.toFixed(2)} and passes.`, true);
-    setTimeout(() => startNewTurnRoom(io, code, S), 1000);
+    if (S.players[pid]) {
+      S.players[pid].chips -= penalty;
+      S.pot += penalty;
+    }
+    roomBroadcastMessage(io, code, `Same cards! ${S.players[pid]?.name || 'Player'} pays $${penalty.toFixed(2)} and passes.`, true);
+    roomBroadcastGameState(io, code);
+    S.turnInProgress = false;
+    setTimeout(() => {
+      if (rooms.has(code) && S.isGameRunning && mySeq === S.turnSeq) {
+        startNewTurnRoom(io, code, S);
+      }
+    }, 700);
     return;
   }
 
-  // 6–7 challenge
+  // 6–7 challenge (cancelable)
   const values = new Set(S.currentCards.map(c => c.value));
   if (values.has(6) && values.has(7)) {
     S.is67ChallengeActive = true;
@@ -243,7 +285,7 @@ async function dealSecondCardRoom(io, code, S) {
 
     if (S.challengeTimer) clearTimeout(S.challengeTimer);
     S.challengeTimer = setTimeout(() => {
-      if (!S.is67ChallengeActive) return;
+      if (!rooms.has(code) || !S.isGameRunning || mySeq !== S.turnSeq) return;
       S.is67ChallengeActive = false;
       io.to(code).emit('end67Challenge');
 
@@ -255,7 +297,7 @@ async function dealSecondCardRoom(io, code, S) {
         loserId = S.sixSevenPresses[S.sixSevenPresses.length - 1];
       }
 
-      if (loserId) {
+      if (loserId && S.players[loserId]) {
         const fine = 2.00;
         S.players[loserId].chips -= fine;
         S.pot += fine;
@@ -269,6 +311,7 @@ async function dealSecondCardRoom(io, code, S) {
   }
 
   roomBroadcastGameState(io, code);
+  S.turnInProgress = false; // ready for bet/pass
 }
 
 /* ==========================
@@ -446,7 +489,14 @@ io.on('connection', (socket) => {
     S.currentPlayerIndex = -1;
     S.isWaitingForAceChoice = false;
 
+    if (S.challengeTimer) { clearTimeout(S.challengeTimer); S.challengeTimer = null; }
+    S.is67ChallengeActive = false;
+    S.turnInProgress = false;
+    S.turnSeq++;
+
+
     roomBroadcastGameState(io, code);
+
   });
 
   /* ---------- Player actions ---------- */
@@ -464,20 +514,24 @@ io.on('connection', (socket) => {
     roomBroadcastGameState(io, code);
   });
 
-  socket.on('aceChoice', (choice) => {
-    const ctx = getSocketRoomState(socket);
-    if (!ctx) return;
-    const { code, S } = ctx;
+    socket.on('aceChoice', (choice) => {
+        const ctx = getSocketRoomState(socket);
+        if (!ctx) return;
+        const { code, S } = ctx;
 
-    if (!S.isWaitingForAceChoice || socket.id !== S.playerOrder[S.currentPlayerIndex]) return;
-    if (choice === 'low') {
-      // find the Ace that was first card
-      const ace = S.currentCards.find(c => c.rank === 'A' || c.rank === 'A (High)');
-      if (ace) ace.value = 1;
-    }
-    S.isWaitingForAceChoice = false;
-    dealSecondCardRoom(io, code, S);
-  });
+        if (!S.isGameRunning) return;
+        const isCurrent = socket.id === S.playerOrder[S.currentPlayerIndex];
+        if (!S.isWaitingForAceChoice || !isCurrent) return;
+
+        if (choice === 'low') {
+            const ace = S.currentCards.find(c => c.rank === 'A' || c.rank === 'A (High)');
+            if (ace) ace.value = 1;
+        }
+        S.isWaitingForAceChoice = false;
+
+        // Continue this same turn, bound to the current sequence
+        dealSecondCardRoom(io, code, S, S.turnSeq);
+    });
 
   socket.on('playerBet', (betAmount) => {
     const ctx = getSocketRoomState(socket);
@@ -491,10 +545,11 @@ io.on('connection', (socket) => {
 
     const amt = parseFloat(betAmount);
     if (!Number.isFinite(amt) || amt <= 0 || amt > player.chips || amt > S.pot) {
-      socket.emit('message', { text: "Invalid bet." });
-      return;
+        socket.emit('message', { text: "Invalid bet." });
+        return;
     }
 
+    const mySeq = S.turnSeq; // bind to this turn
     io.to(code).emit('playerBetPlaced', { playerId: socket.id, amount: amt });
 
     const nextCard = S.deck.pop();
@@ -502,38 +557,40 @@ io.on('connection', (socket) => {
     let isPost = false, outcome, messageText;
 
     if (nextCard.value > lowCard.value && nextCard.value < highCard.value) {
-      // Win
-      player.chips += amt;
-      S.pot -= amt;
-      outcome = "win";
-      messageText = `Winner! ${player.name} wins $${amt.toFixed(2)}.`;
-      if (S.playerStats[player.id]) S.playerStats[player.id].wins++;
+        player.chips += amt;
+        S.pot -= amt;
+        outcome = "win";
+        messageText = `Winner! ${player.name} wins $${amt.toFixed(2)}.`;
+        if (S.playerStats[player.id]) S.playerStats[player.id].wins++;
     } else if (nextCard.value === lowCard.value || nextCard.value === highCard.value) {
-      // Post = pay double
-      const penalty = amt * 2;
-      player.chips -= penalty;
-      S.pot += penalty;
-      isPost = true;
-      outcome = "post";
-      messageText = `Hit the post! ${player.name} pays double ($${penalty.toFixed(2)}).`;
-      if (S.playerStats[player.id]) S.playerStats[player.id].posts++;
+        const penalty = amt * 2;
+        player.chips -= penalty;
+        S.pot += penalty;
+        isPost = true;
+        outcome = "post";
+        messageText = `Hit the post! ${player.name} pays double ($${penalty.toFixed(2)}).`;
+        if (S.playerStats[player.id]) S.playerStats[player.id].posts++;
     } else {
-      // Loss
-      player.chips -= amt;
-      S.pot += amt;
-      outcome = "loss";
-      messageText = `Outside. ${player.name} loses $${amt.toFixed(2)}.`;
-      if (S.playerStats[player.id]) S.playerStats[player.id].losses++;
+        player.chips -= amt;
+        S.pot += amt;
+        outcome = "loss";
+        messageText = `Outside. ${player.name} loses $${amt.toFixed(2)}.`;
+        if (S.playerStats[player.id]) S.playerStats[player.id].losses++;
     }
 
     const isDramatic = amt >= 40;
     io.to(code).emit('cardResult', { card: nextCard, isPost, isDramatic, betAmount: amt });
 
     setTimeout(() => {
-      roomBroadcastMessage(io, code, messageText, true, player.id, outcome, amt);
-      setTimeout(() => startNewTurnRoom(io, code, S), isDramatic ? 1500 : 700);
+        if (!rooms.has(code) || !S.isGameRunning || mySeq !== S.turnSeq) return;
+        roomBroadcastMessage(io, code, messageText, true, player.id, outcome, amt);
+        setTimeout(() => {
+        if (rooms.has(code) && S.isGameRunning && mySeq === S.turnSeq) {
+            startNewTurnRoom(io, code, S);
+        }
+        }, isDramatic ? 1500 : 700);
     }, isDramatic ? 1500 : 700);
-  });
+    });
 
   socket.on('playerPass', () => {
     const ctx = getSocketRoomState(socket);
@@ -545,9 +602,15 @@ io.on('connection', (socket) => {
     if (socket.id !== S.playerOrder[S.currentPlayerIndex]) return;
     if (S.isWaitingForAceChoice) return;
 
+    const mySeq = S.turnSeq;
     roomBroadcastMessage(io, code, `${player.name} passes.`, false, socket.id);
-    setTimeout(() => startNewTurnRoom(io, code, S), 600);
-  });
+
+    setTimeout(() => {
+        if (rooms.has(code) && S.isGameRunning && mySeq === S.turnSeq) {
+        startNewTurnRoom(io, code, S);
+        }
+    }, 600);
+    });
 
   socket.on('pressed67', () => {
     const ctx = getSocketRoomState(socket);
@@ -629,6 +692,11 @@ io.on('connection', (socket) => {
         // Not enough players -> pause
         if (S.playerOrder.length < S.MIN_PLAYERS) {
           S.isGameRunning = false;
+
+          if (S.challengeTimer) { clearTimeout(S.challengeTimer); S.challengeTimer = null; }
+          S.is67ChallengeActive = false;
+          S.turnInProgress = false;
+          S.turnSeq++; // invalidate any scheduled tasks from the prior state
           roomBroadcastMessage(io, code, 'Not enough players. Game paused.');
           roomBroadcastGameState(io, code);
           return;
