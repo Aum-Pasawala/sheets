@@ -1,25 +1,34 @@
-/* Action controls */
+/* ===========================
+   Action controls (table HUD)
+   =========================== */
 .action-area {
   position: absolute;
   bottom: 25px;
+
+  width: 80%;                   /* ✅ smaller width */
+  left: 50%;                    /* ✅ center the container itself */
+  transform: translateX(-50%);  /* ✅ align middle of that 80% area */
+
   display: flex;
+  justify-content: center;      /* ✅ center buttons inside that area */
   gap: 12px;
+
   background-color: rgba(0, 70, 0, 0.7);
   padding: 12px;
   border-radius: 10px;
   z-index: 60;
 }
-/* --- Pot & Quick Bet Buttons (Aligned + Light Green) --- */
+
+/* --- Pot & Quick Bet Buttons --- */
 .pot-group {
   display: flex;
   align-items: flex-start;
-  gap: 12px; /* matches general button gap spacing */
+  gap: 12px;
   position: relative;
 }
 
-/* All-In button — light green to match Bet button */
 .allin-btn {
-  background-color: #66cd32; 
+  background-color: #66cd32;
   color: #fff;
   border: none;
   height: 48px;
@@ -30,17 +39,16 @@
   transition: transform 0.1s, background 0.2s;
 }
 .allin-btn:hover {
-  background-color: #5ee165; 
+  background-color: #5ee165;
   transform: scale(1.05);
 }
 
-/* Pot button — normal */
 .pot-btn {
   height: 48px;
   padding: 12px 24px;
 }
 
-/* Fraction buttons stack vertically beside Pot */
+/* Fraction buttons stacked beside Pot */
 .fraction-group {
   display: flex;
   flex-direction: column;
@@ -48,7 +56,6 @@
   height: 48px; /* match Pot height */
   gap: 4px;
 }
-
 .fraction-btn {
   background-color: #1976d2;
   color: #fff;
@@ -58,19 +65,17 @@
   padding: 4px 10px;
   cursor: pointer;
   transition: background 0.2s, transform 0.1s;
-  height: calc(50% - 2px); /* equal halves */
-  min-width: 54px; /* visually balances with pot button */
+  height: calc(50% - 2px);
+  min-width: 54px;
 }
 .fraction-btn:hover {
   background-color: #1565c0;
   transform: scale(1.05);
 }
-.credit-btn {
-  background-color: #000000;
-}
-.credit-btn:hover {
-  background-color: #222222;
-}
+
+.credit-btn { background-color: #000; }
+.credit-btn:hover { background-color: #222; }
+
 input[type="number"] {
   width: 110px;
   padding: 12px;
@@ -78,6 +83,7 @@ input[type="number"] {
   border: 1px solid #ccc;
   font-size: 18px;
 }
+
 button {
   padding: 12px 28px;
   font-size: 18px;
@@ -88,9 +94,7 @@ button {
   cursor: pointer;
   transition: background-color 0.2s;
 }
-button:hover {
-  background-color: #34495e;
-}
+button:hover { background-color: #34495e; }
 
 button kbd {
   font-size: 12px;
@@ -100,77 +104,88 @@ button kbd {
   margin-left: 5px;
 }
 
-.cancel-btn {
-  background-color: #7f8c8d;
-}
-.cancel-btn:hover {
-  background-color: #95a5a6;
-}
+.cancel-btn { background-color: #7f8c8d; }
+.cancel-btn:hover { background-color: #95a5a6; }
 
-/* Modals */
+/* =========
+   Modals
+   ========= */
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0,0,0,.7);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 4000; /* above table UI */
 }
 .modal-content {
   background: #2c3e50;
   padding: 40px;
   border-radius: 10px;
   text-align: center;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 5px 15px rgba(0,0,0,.5);
+  z-index: 4001;
 }
-.modal-content h2 {
-  margin-top: 0;
-}
+.modal-content h2 { margin-top: 0; }
+
+/* (Global modal inputs/buttons default) */
 .modal-content input,
 .modal-content button {
   display: inline-block;
   margin: 10px;
 }
 
+/* ===== Buy-in modal layout (overrides inline-block above) ===== */
 .buy-in-modal {
-  width: 700px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 360px;
   max-width: calc(100% - 48px);
-  padding: 36px 48px;
-  font-size: 20px;
-  border-radius: 14px;
+  margin: auto;
+  text-align: center;
+}
+.buy-in-modal input[type="text"],
+.buy-in-modal input[type="number"],
+.buy-in-modal button {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 10px 0; /* vertical spacing only */
 }
 .buy-in-modal input[type="text"],
 .buy-in-modal input[type="number"] {
-  display: block;
-  width: 420px;
-  max-width: 90%;
-  padding: 14px 16px;
-  margin: 12px auto;
-  font-size: 20px;
-  border-radius: 8px;
-  border: 1px solid #666;
+  padding: 12px;
+  font-size: 1rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
   background: #fff;
   color: #111;
 }
-.buy-in-modal button {
-  padding: 14px 36px;
-  font-size: 20px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #27ae60, #229954);
-  border: none;
-  color: #fff;
+.buy-in-modal .button-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+.buy-in-modal .button-row button {
+  flex: 1;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-weight: 600;
 }
 
-/* Leaderboard */
+/* =================
+   Leaderboard card
+   ================= */
 .leaderboard {
   position: fixed;
   top: 20px;
   left: 20px;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(0,0,0,.75);
   padding: 15px;
   border-radius: 10px;
   width: 320px;
@@ -181,10 +196,7 @@ button kbd {
   text-align: center;
   font-size: 22px;
 }
-.leaderboard table {
-  width: 100%;
-  border-collapse: collapse;
-}
+.leaderboard table { width: 100%; border-collapse: collapse; }
 .leaderboard th,
 .leaderboard td {
   padding: 6px;
@@ -195,30 +207,25 @@ button kbd {
   border-bottom: 2px solid #777;
   font-size: 14px;
 }
-.leaderboard .my-row {
-  background-color: rgba(41, 128, 185, 0.4);
-}
-.leaderboard .net-positive {
-  color: #2ecc71;
-  font-weight: bold;
-}
-.leaderboard .net-negative {
-  color: #e74c3c;
-  font-weight: bold;
-}
+.leaderboard .my-row { background-color: rgba(41,128,185,.4); }
+.leaderboard .net-positive { color: #2ecc71; font-weight: bold; }
+.leaderboard .net-negative { color: #e74c3c; font-weight: bold; }
 
+/* ================
+   Settings panel
+   ================ */
 .settings-area {
   position: fixed;
   top: 20px;
   right: 20px;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(0,0,0,.75);
   padding: 12px 16px;
   border-radius: 8px;
   display: flex;
   align-items: center;
   gap: 15px;
   z-index: 1001;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255,255,255,.1);
 }
 .settings-area label {
   color: #ccc;
@@ -239,13 +246,12 @@ button kbd {
   border-color: #777;
 }
 
-/* --- Add-to-Pot Controls (Admin Only) --- */
+/* Add-to-Pot controls (admin-gated via JS) */
 #manualPotInput,
 #addPotBtn,
 label[for="manualPotInput"] {
-  display: none; /* hidden for non-admins */
+  display: none;
 }
-
 .add-pot-btn {
   background-color: #8e44ad;
   color: white;
@@ -254,14 +260,12 @@ label[for="manualPotInput"] {
   border-radius: 6px;
   border: none;
   cursor: pointer;
-  transition: background 0.2s, transform 0.1s;
+  transition: background .2s, transform .1s;
 }
-
 .add-pot-btn:hover {
   background-color: #9b59b6;
   transform: scale(1.05);
 }
-
 #manualPotInput {
   width: 80px;
   background: #333;
@@ -272,14 +276,30 @@ label[for="manualPotInput"] {
   border-radius: 6px;
 }
 
+/* End Game button (always styled) */
+.end-game-btn {
+  background-color: #c0392b;
+  color: #fff;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: background .2s, transform .1s;
+}
+.end-game-btn:hover {
+  background-color: #e74c3c;
+  transform: scale(1.03);
+}
+
+/* Toggles */
 .audio-controls {
   display: flex;
   gap: 12px;
   margin-left: 10px;
   padding-left: 12px;
-  border-left: 1px solid rgba(255, 255, 255, 0.2);
+  border-left: 1px solid rgba(255,255,255,.2);
 }
-
 .toggle-switch {
   display: flex;
   align-items: center;
@@ -287,21 +307,16 @@ label[for="manualPotInput"] {
   cursor: pointer;
   user-select: none;
 }
-
-.toggle-switch input[type="checkbox"] {
-  display: none;
-}
-
+.toggle-switch input[type="checkbox"] { display: none; }
 .toggle-slider {
   position: relative;
   width: 44px;
   height: 24px;
   background: #555;
   border-radius: 12px;
-  transition: background 0.3s;
+  transition: background .3s;
   border: 2px solid #666;
 }
-
 .toggle-slider:before {
   content: '';
   position: absolute;
@@ -309,27 +324,21 @@ label[for="manualPotInput"] {
   height: 16px;
   border-radius: 50%;
   background: white;
-  top: 2px;
-  left: 2px;
-  transition: transform 0.3s;
+  top: 2px; left: 2px;
+  transition: transform .3s;
 }
-
 .toggle-switch input[type="checkbox"]:checked + .toggle-slider {
   background: #27ae60;
   border-color: #2ecc71;
 }
-
 .toggle-switch input[type="checkbox"]:checked + .toggle-slider:before {
   transform: translateX(20px);
 }
+.toggle-label { font-size: 13px; color: #bdc3c7; font-weight: 500; }
 
-.toggle-label {
-  font-size: 13px;
-  color: #bdc3c7;
-  font-weight: 500;
-}
-
-/* 6-7 and Start Game Buttons */
+/* ========================
+   6–7 & Start Game buttons
+   ======================== */
 .six-seven-btn,
 .start-game-btn {
   position: absolute;
@@ -347,7 +356,7 @@ label[for="manualPotInput"] {
   background-color: #e74c3c;
   border-radius: 50%;
   animation: pulse 1s infinite, flash-red 0.5s infinite;
-  box-shadow: 0 0 25px rgba(255, 0, 0, 0.7);
+  box-shadow: 0 0 25px rgba(255,0,0,.7);
 }
 .start-game-btn {
   padding: 20px 40px;
@@ -355,39 +364,21 @@ label[for="manualPotInput"] {
   background-color: #27ae60;
 }
 
-/* Chat */
+/* =====
+   Chat
+   ===== */
 .chat-container {
   position: fixed;
   bottom: 20px;
   right: 20px;
   width: 320px;
   height: 420px;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0,0,0,.8);
   border: 2px solid #555;
   border-radius: 10px;
   display: flex;
   flex-direction: column;
   z-index: 999;
-}
-.chat-window {
-  flex-grow: 1;
-  padding: 12px;
-  overflow-y: auto;
-  color: white;
-}
-.chat-window p {
-  margin: 0 0 6px 0;
-  word-wrap: break-word;
-  font-size: 14px;
-}
-.chat-window p.system-message {
-  font-style: italic;
-  color: #aaa;
-}
-.chat-input-area {
-  display: flex;
-  padding: 8px;
-  border-top: 1px solid #555;
 }
 .chat-header {
   display: flex;
@@ -396,12 +387,9 @@ label[for="manualPotInput"] {
   gap: 8px;
   padding: 8px 10px;
   border-bottom: 1px solid #555;
-  background: rgba(255,255,255,0.06);
+  background: rgba(255,255,255,.06);
 }
-.chat-title {
-  font-weight: 600;
-  letter-spacing: 0.2px;
-}
+.chat-title { font-weight: 600; letter-spacing: .2px; }
 .chat-min-btn {
   background: #444;
   padding: 6px 10px;
@@ -410,8 +398,6 @@ label[for="manualPotInput"] {
   cursor: pointer;
 }
 .chat-min-btn:hover { background: #555; }
-
-/* Unread badge (shows when minimized and messages arrive) */
 .chat-unread-badge {
   background: #e74c3c;
   color: #fff;
@@ -422,15 +408,18 @@ label[for="manualPotInput"] {
   padding: 0 6px;
   border-radius: 10px;
 }
-
-/* Minimized state */
-.chat-container.minimized {
-  height: 44px;           /* just the header row */
-  overflow: hidden;
+.chat-window {
+  flex-grow: 1;
+  padding: 12px;
+  overflow-y: auto;
+  color: white;
 }
-.chat-container.minimized .chat-window,
-.chat-container.minimized .chat-input-area {
-  display: none;
+.chat-window p { margin: 0 0 6px 0; word-wrap: break-word; font-size: 14px; }
+.chat-window p.system-message { font-style: italic; color: #aaa; }
+.chat-input-area {
+  display: flex;
+  padding: 8px;
+  border-top: 1px solid #555;
 }
 #chat-input {
   flex-grow: 1;
@@ -440,10 +429,16 @@ label[for="manualPotInput"] {
   padding: 10px;
   font-size: 14px;
 }
-#chat-send-btn {
-  background: #3498db;
-  font-size: 14px;
-}
+#chat-send-btn { background: #3498db; font-size: 14px; }
+
+/* Minimized chat */
+.chat-container.minimized { height: 44px; overflow: hidden; }
+.chat-container.minimized .chat-window,
+.chat-container.minimized .chat-input-area { display: none; }
+
+/* ==========================
+   Responsive adjustments
+   ========================== */
 @media screen and (max-width: 768px) {
   .action-area {
     bottom: 10px;
@@ -453,38 +448,21 @@ label[for="manualPotInput"] {
     justify-content: center;
     max-width: 95%;
   }
-
   input[type="number"] {
     width: 90px;
     padding: 10px;
-    font-size: 16px; /* Prevents iOS zoom */
+    font-size: 16px; /* Prevent iOS zoom */
   }
-
   button {
     padding: 10px 18px;
     font-size: 15px;
-    touch-action: manipulation; /* Better touch response */
+    touch-action: manipulation;
   }
+  button kbd { display: none; }
 
-  button kbd {
-    display: none; /* Hide keyboard shortcuts on mobile */
-  }
-
-  .leaderboard {
-    width: 280px;
-    padding: 10px;
-    font-size: 12px;
-  }
-
-  .leaderboard h3 {
-    font-size: 16px;
-  }
-
-  .leaderboard th,
-  .leaderboard td {
-    padding: 4px;
-    font-size: 11px;
-  }
+  .leaderboard { width: 280px; padding: 10px; font-size: 12px; }
+  .leaderboard h3 { font-size: 16px; }
+  .leaderboard th, .leaderboard td { padding: 4px; font-size: 11px; }
 
   .settings-area {
     top: 10px;
@@ -494,18 +472,16 @@ label[for="manualPotInput"] {
     flex-direction: column;
     align-items: flex-end;
   }
-
   .settings-area input[type="number"] {
     width: 60px;
     padding: 4px;
     font-size: 14px;
   }
-
   .audio-controls {
     margin-left: 0;
     padding-left: 0;
     border-left: none;
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    border-top: 1px solid rgba(255,255,255,.2);
     padding-top: 8px;
   }
 
@@ -517,46 +493,23 @@ label[for="manualPotInput"] {
     left: 5%;
   }
 
-  .six-seven-btn {
-    padding: 25px 35px;
-    font-size: 36px;
+  .six-seven-btn { padding: 25px 35px; font-size: 36px; }
+  .start-game-btn { padding: 15px 30px; font-size: 18px; }
+
+  .modal-content { padding: 25px; max-width: 90%; }
+  .buy-in-modal { width: 90%; padding: 25px; }
+  /* Modal Join button (not the big table overlay) */
+  .join-btn {
+    background-color: #3498db;
+  }
+  .join-btn:hover {
+    background-color: #2980b9;
   }
 
-  .start-game-btn {
-    padding: 15px 30px;
-    font-size: 18px;
+  /* Make the two buttons sit nicely side-by-side */
+  .buy-in-modal .button-row button {
+    flex: 1;
+    width: auto;       /* override any width:100% from earlier */
+    margin: 0;
   }
-
-  /* Modal adjustments */
-  .modal-content {
-    padding: 25px;
-    max-width: 90%;
-  }
-
-  .buy-in-modal {
-    width: 90%;
-    padding: 25px;
-  }
-
-  .buy-in-modal input[type="text"],
-  .buy-in-modal input[type="number"] {
-    width: 100%;
-    font-size: 16px; /* Prevents iOS zoom */
-  }
-
-  .end-game-btn {
-  background-color: #c0392b;
-  color: #fff;
-  font-weight: 600;
-  padding: 6px 12px;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
-  transition: background 0.2s, transform 0.1s;
-}
-.end-game-btn:hover {
-  background-color: #e74c3c;
-  transform: scale(1.03);
-}
-
 }

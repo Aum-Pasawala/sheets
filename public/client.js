@@ -7,6 +7,11 @@ const buyInScreen = document.getElementById('buyInScreen');
 const nameInput = document.getElementById('nameInput');
 const buyInInput = document.getElementById('buyInInput');
 const joinGameBtn = document.getElementById('joinGameBtn');
+const createGameBtn = document.getElementById('createGameBtn');
+const roomCodeInput = document.getElementById('roomCodeInput');
+const roomCodeBanner = document.getElementById('roomCodeBanner');
+const roomCodeText   = document.getElementById('roomCodeText');
+let myRoomCode = null; // store which room we’re in
 const aceChoiceScreen = document.getElementById('aceChoiceScreen');
 const aceLowBtn = document.getElementById('aceLowBtn');
 const aceHighBtn = document.getElementById('aceHighBtn');
@@ -256,19 +261,31 @@ getStartedBtn.addEventListener('click', async () => {
   }
 });
 
-joinGameBtn.addEventListener('click', () => {
-  const buy = parseFloat(buyInInput.value);
-  const name = nameInput.value || `Player ${Math.floor(Math.random() * 100)}`;
-  if (buy > 0) {
-    socket.emit('joinGame', { name, buyIn: buy });
-    buyInScreen.style.display = 'none';
-    gameTable.style.display = 'flex';
-    chatContainer.style.display = 'flex';
-    leaderboard.style.display = 'block';
-    sounds.click();
-    startMusic();
-  }
-});
+if (createGameBtn) {
+  createGameBtn.addEventListener('click', () => {
+    const name = (document.getElementById('nameInput').value || '').trim(); // optional
+    const buyIn = parseFloat(document.getElementById('buyInInput').value);
+    if (!Number.isFinite(buyIn) || buyIn <= 0) {
+      alert('Enter a valid buy-in.');
+      return;
+    }
+    socket.emit('createRoom', { name, buyIn });
+  });
+}
+
+if (joinGameBtn) {
+  joinGameBtn.addEventListener('click', () => {
+    const name = (document.getElementById('nameInput').value || '').trim(); // optional
+    const buyIn = parseFloat(document.getElementById('buyInInput').value);
+    const code = (roomCodeInput.value || '').trim().toUpperCase();
+    if (!code) { alert('Enter a room code to join.'); return; }
+    if (!Number.isFinite(buyIn) || buyIn <= 0) {
+      alert('Enter a valid buy-in.');
+      return;
+    }
+    socket.emit('joinRoom', { code, name, buyIn });
+  });
+}
 
 creditButton.addEventListener('click', () => creditScreen.style.display = 'flex');
 addCreditBtn.addEventListener('click', () => {
@@ -513,6 +530,8 @@ socket.on('gameState', (state) => {
   endGameBtn.addEventListener('click', () => {
     socket.emit('endGameSplit');
   });
+  const hasPlayers = Array.isArray(state.playerOrder) && state.playerOrder.length > 0;
+  setLeaderboardVisible(hasPlayers);
 }
 
   startGameBtn.style.display =
@@ -762,4 +781,35 @@ socket.on('playerBetPlaced', (data) => {
     betElem.classList.add('fade-out');
     setTimeout(() => betElem.remove(), 500);
   }, 2500);
+});
+
+socket.on('roomError', (msg) => {
+  alert(msg);
+});
+
+function setLeaderboardVisible(on) {
+  const el = document.getElementById('leaderboard');
+  if (el) el.style.display = on ? 'block' : 'none';
+}
+
+function handleJoinedRoomState(state) {
+  const home = document.getElementById('homePage');
+  const modal = document.getElementById('buyInScreen');
+  const table = document.getElementById('gameTable');
+  if (home)  home.style.display = 'none';
+  if (modal) modal.style.display = 'none';
+  if (table) table.style.display = 'block';
+}
+
+socket.on('roomCreated', ({ code, state }) => {
+  myRoomCode = code;
+  if (roomCodeBanner) { roomCodeText.textContent = code; roomCodeBanner.style.display = 'block'; }
+  handleJoinedRoomState(state);
+  setLeaderboardVisible(true);
+});
+socket.on('joinedRoom', ({ code, state }) => {
+  myRoomCode = code;
+  if (roomCodeBanner) { roomCodeText.textContent = code; roomCodeBanner.style.display = 'block'; }
+  handleJoinedRoomState(state);
+  setLeaderboardVisible(true);
 });

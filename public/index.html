@@ -12,6 +12,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
 </head>
 <body>
+    <div id="roomCodeBanner"
+        style="position:fixed; top:8px; left:50%; transform:translateX(-50%);
+                background:rgba(0,0,0,.6); padding:6px 12px; border-radius:8px;
+                font-weight:600; display:none; z-index:1200;">
+        Room: <span id="roomCodeText">—</span>
+    </div>
     <!-- Home Page -->
     <div id="homePage" class="home-page">
         <div class="home-content">
@@ -89,14 +95,23 @@
         </table>
     </div>
 
-    <!-- Buy-in Screen - BIGGER -->
+    <!-- Buy-in Screen -->
     <div id="buyInScreen" class="modal-overlay" style="display: none;">
         <div class="modal-content buy-in-modal">
-            <h2>Buy-in to the Game</h2>
-            <p>Enter your name and buy-in amount to join the action!</p>
-            <input type="text" id="nameInput" placeholder="Enter your name" maxlength="15">
-            <input type="number" id="buyInInput" value="100" step="1.00" placeholder="Enter amount" min="0.50">
-            <button id="joinGameBtn">Join Game</button>
+            <h2>Buy In</h2>
+
+            <input type="text" id="nameInput" placeholder="Your name" maxlength="15" />
+
+            <input type="number" id="buyInInput" value="100" step="1.00"
+                placeholder="Buy-in amount" min="0.50" />
+
+            <input type="text" id="roomCodeInput" placeholder="Room code (e.g. K7F2QX)"
+                maxlength="8" />
+
+            <div class="button-row">
+            <button id="createGameBtn" class="credit-btn">Create Game</button>
+            <button id="joinGameBtn" class="join-btn">Join Game</button>
+            </div>
         </div>
     </div>
 
