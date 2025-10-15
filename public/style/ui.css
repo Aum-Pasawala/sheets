@@ -356,7 +356,14 @@ label[for="manualPotInput"] {
   background-color: #e74c3c;
   border-radius: 50%;
   animation: pulse 1s infinite, flash-red 0.5s infinite;
-  box-shadow: 0 0 25px rgba(255,0,0,.7);
+  box-shadow: 0 0 25px rgba(255, 0, 0, 0.7);
+
+  /* ✅ Add these lines for centering */
+  position: absolute;
+  left: 10%;
+  top: 500%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
 }
 .start-game-btn {
   padding: 20px 40px;
