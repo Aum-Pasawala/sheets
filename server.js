@@ -688,7 +688,18 @@ io.on('connection', (socket) => {
       S.players[socket.id].disconnected = true;
       S.playerOrder = S.playerOrder.filter(id => id !== socket.id);
 
+      const p = S.players[socket.id];
+      if (p) {
+        const net = (p.chips ?? 0) - (p.totalBuyIn ?? 0);
+        const sign = net >= 0 ? '+' : '-';
+        roomBroadcastSystemMessage(
+            io,
+            code,
+            `${name} has left the game. Net: ${sign}$${Math.abs(net).toFixed(2)}`
+        );
+      } else {
       roomBroadcastSystemMessage(io, code, `${name} has left the game.`);
+      }
 
       // reassign admin if needed
       if (wasAdmin && S.playerOrder.length > 0) {
