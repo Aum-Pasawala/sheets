@@ -286,21 +286,25 @@ if (diff === 0) {
 }
 
 if (diff === 1) {
-  // One-card gap → no penalty, just skip
-  roomBroadcastMessage(
-    io,
-    code,
-    `One card gap (${S.currentCards[0].rank}–${S.currentCards[1].rank}) — unwinnable! Turn skipped.`,
-    true
-  );
-  roomBroadcastGameState(io, code);
-  S.turnInProgress = false;
-  setTimeout(() => {
-    if (rooms.has(code) && S.isGameRunning && mySeq === S.turnSeq) {
-      startNewTurnRoom(io, code, S);
-    }
-  }, 700);
-  return;
+  // Exception: DO NOT skip if it's exactly 6 and 7 (allow the 6–7 challenge)
+  const isSixSeven = (low === 6 && high === 7);
+  if (!isSixSeven) {
+    roomBroadcastMessage(
+      io,
+      code,
+      `One card gap (${S.currentCards[0].rank}–${S.currentCards[1].rank}) — unwinnable! Turn skipped.`,
+      true
+    );
+    roomBroadcastGameState(io, code);
+    S.turnInProgress = false;
+    setTimeout(() => {
+      if (rooms.has(code) && S.isGameRunning && mySeq === S.turnSeq) {
+        startNewTurnRoom(io, code, S);
+      }
+    }, 700);
+    return;
+  }
+  // If it IS 6–7, fall through so the challenge code below runs.
 }
 
   // 6–7 challenge (cancelable)
