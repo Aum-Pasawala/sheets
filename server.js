@@ -44,6 +44,8 @@ function newRoomState() {
     sixSevenPresses: [],     // array of socket ids who pressed
     challengeTimer: null,
 
+    turnTimer: null,
+
     spectators: {}
   };
 }
@@ -137,6 +139,34 @@ function roomBroadcastSystemMessage(io, code, text) {
   io.to(code).emit('newChatMessage', { isSystem: true, message: text });
 }
 
+function clearTurnTimer(S) {
+  if (S.turnTimer) {
+    clearTimeout(S.turnTimer);
+    S.turnTimer = null;
+  }
+}
+
+function armTurnTimer(io, code, S, seq) {
+  clearTurnTimer(S);
+  S.turnTimer = setTimeout(() => {
+    // Only fire if this is still the same turn and game is live
+    if (!rooms.has(code) || !S.isGameRunning || seq !== S.turnSeq) return;
+    const pid = S.playerOrder[S.currentPlayerIndex];
+    if (!pid || !S.players[pid]) return;
+
+    roomBroadcastMessage(
+      io,
+      code,
+      `${S.players[pid].name} timed out (20s). Auto-pass.`,
+      true,
+      pid
+    );
+
+    // Advance to next turn
+    startNewTurnRoom(io, code, S);
+  }, 20000); // 20s
+}
+
 /* ==========================
    Turn Flow (room-scoped)
    ========================== */
@@ -149,6 +179,7 @@ async function startNewTurnRoom(io, code, S) {
     S.isGameRunning = false;
     // cancel pending async for prior turns
     if (S.challengeTimer) { clearTimeout(S.challengeTimer); S.challengeTimer = null; }
+    clearTurnTimer(S);
     S.is67ChallengeActive = false;
     S.turnInProgress = false;
     S.turnSeq++; // invalidate old tasks
@@ -204,6 +235,7 @@ async function startNewTurnRoom(io, code, S) {
 
   // Reset per-turn flags/timers
   if (S.challengeTimer) { clearTimeout(S.challengeTimer); S.challengeTimer = null; }
+  clearTurnTimer(S);
   S.is67ChallengeActive = false;
   S.sixSevenPresses = [];
   S.isWaitingForAceChoice = false;
@@ -265,6 +297,7 @@ const pid = S.playerOrder[S.currentPlayerIndex];
 if (diff === 0) {
   // Same card → penalty + pass
   const penalty = 1.00;
+  clearTurnTimer(S);
   if (S.players[pid]) {
     S.players[pid].chips -= penalty;
     S.pot += penalty;
@@ -295,6 +328,7 @@ if (diff === 1) {
       `One card gap (${S.currentCards[0].rank}–${S.currentCards[1].rank}) — unwinnable! Turn skipped.`,
       true
     );
+    clearTurnTimer(S);
     roomBroadcastGameState(io, code);
     S.turnInProgress = false;
     setTimeout(() => {
@@ -339,11 +373,19 @@ if (diff === 1) {
       } else {
         roomBroadcastMessage(io, code, "6-7 challenge ended with no loser.");
       }
+
+      if (rooms.has(code) && S.isGameRunning && mySeq === S.turnSeq) {
+            armTurnTimer(io, code, S, mySeq);
+        }
     }, 5000);
   }
 
   roomBroadcastGameState(io, code);
   S.turnInProgress = false; // ready for bet/pass
+
+  if (!S.is67ChallengeActive) {
+    armTurnTimer(io, code, S, mySeq);
+ }
 }
 
 /* ==========================
@@ -524,6 +566,7 @@ io.on('connection', (socket) => {
     S.isWaitingForAceChoice = false;
 
     if (S.challengeTimer) { clearTimeout(S.challengeTimer); S.challengeTimer = null; }
+    clearTurnTimer(S);
     S.is67ChallengeActive = false;
     S.turnInProgress = false;
     S.turnSeq++;
@@ -552,6 +595,7 @@ io.on('connection', (socket) => {
         const ctx = getSocketRoomState(socket);
         if (!ctx) return;
         const { code, S } = ctx;
+        clearTurnTimer(S);
 
         if (!S.isGameRunning) return;
         const isCurrent = socket.id === S.playerOrder[S.currentPlayerIndex];
@@ -571,6 +615,7 @@ io.on('connection', (socket) => {
     const ctx = getSocketRoomState(socket);
     if (!ctx) return;
     const { code, S } = ctx;
+    clearTurnTimer(S);
 
     const player = S.players[socket.id];
     if (!S.isGameRunning || !player) return;
@@ -630,6 +675,7 @@ io.on('connection', (socket) => {
     const ctx = getSocketRoomState(socket);
     if (!ctx) return;
     const { code, S } = ctx;
+    clearTurnTimer(S);
 
     const player = S.players[socket.id];
     if (!S.isGameRunning || !player) return;
@@ -739,6 +785,7 @@ io.on('connection', (socket) => {
           S.isGameRunning = false;
 
           if (S.challengeTimer) { clearTimeout(S.challengeTimer); S.challengeTimer = null; }
+          clearTurnTimer(S);
           S.is67ChallengeActive = false;
           S.turnInProgress = false;
           S.turnSeq++; // invalidate any scheduled tasks from the prior state
