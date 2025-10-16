@@ -256,24 +256,52 @@ async function dealSecondCardRoom(io, code, S, seq) {
   if (!rooms.has(code) || !S.isGameRunning || mySeq !== S.turnSeq) return;
   io.to(code).emit('dealMiddleCardPlaceholder');
 
-  // Same-card penalty -> auto-pass this turn
-  if (S.currentCards[0].value === S.currentCards[1].value) {
-    const pid = S.playerOrder[S.currentPlayerIndex];
-    const penalty = 1.00;
-    if (S.players[pid]) {
-      S.players[pid].chips -= penalty;
-      S.pot += penalty;
-    }
-    roomBroadcastMessage(io, code, `Same cards! ${S.players[pid]?.name || 'Player'} pays $${penalty.toFixed(2)} and passes.`, true);
-    roomBroadcastGameState(io, code);
-    S.turnInProgress = false;
-    setTimeout(() => {
-      if (rooms.has(code) && S.isGameRunning && mySeq === S.turnSeq) {
-        startNewTurnRoom(io, code, S);
-      }
-    }, 700);
-    return;
+  // Auto-pass logic: same card (penalty) OR one-card gap (no penalty)
+const low = S.currentCards[0].value;
+const high = S.currentCards[1].value;
+const diff = Math.abs(high - low);
+const pid = S.playerOrder[S.currentPlayerIndex];
+
+if (diff === 0) {
+  // Same card → penalty + pass
+  const penalty = 1.00;
+  if (S.players[pid]) {
+    S.players[pid].chips -= penalty;
+    S.pot += penalty;
   }
+  roomBroadcastMessage(
+    io,
+    code,
+    `Same cards! ${S.players[pid]?.name || 'Player'} pays $${penalty.toFixed(2)} and passes.`,
+    true
+  );
+  roomBroadcastGameState(io, code);
+  S.turnInProgress = false;
+  setTimeout(() => {
+    if (rooms.has(code) && S.isGameRunning && mySeq === S.turnSeq) {
+      startNewTurnRoom(io, code, S);
+    }
+  }, 700);
+  return;
+}
+
+if (diff === 1) {
+  // One-card gap → no penalty, just skip
+  roomBroadcastMessage(
+    io,
+    code,
+    `One card gap (${S.currentCards[0].rank}–${S.currentCards[1].rank}) — unwinnable! Turn skipped.`,
+    true
+  );
+  roomBroadcastGameState(io, code);
+  S.turnInProgress = false;
+  setTimeout(() => {
+    if (rooms.has(code) && S.isGameRunning && mySeq === S.turnSeq) {
+      startNewTurnRoom(io, code, S);
+    }
+  }, 700);
+  return;
+}
 
   // 6–7 challenge (cancelable)
   const values = new Set(S.currentCards.map(c => c.value));
@@ -349,6 +377,7 @@ io.on('connection', (socket) => {
 
     roomBroadcastSystemMessage(io, code, `${finalName} created the game (code ${code}).`);
     socket.emit('roomCreated', { code, state: serializeState(S) });
+    socket.emit('message', { text: "Waiting for players to join..." }); // ✅ NEW LINE
     roomBroadcastGameState(io, code);
 
     // 👉 Do NOT set S.isGameRunning and do NOT deduct pot here.
@@ -393,6 +422,7 @@ io.on('connection', (socket) => {
 
     roomBroadcastSystemMessage(io, code, `${finalName} has joined the game.`);
     socket.emit('joinedRoom', { code, state: serializeState(S) });
+    socket.emit('message', { text: "Waiting for the game to start..." });
 
     const needed = S.MIN_PLAYERS - S.playerOrder.length;
     if (needed > 0) {
